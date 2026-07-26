@@ -45,3 +45,6 @@ outputs/
 Thumbs.db
 desktop.ini
 .DS_Store
+
+# Leak-scan term list (contains the very strings it guards)
+.leakpatterns
