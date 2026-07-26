@@ -249,6 +249,31 @@ def test_tie_breaking_is_hashed_not_generation_order() -> None:
     assert [item.d_stratum for item in again.tuples] == blocks
 
 
+def test_tie_key_matches_the_amendment_specification() -> None:
+    """Amendment 001 §4.1, byte-exact.
+
+        payload = ASCII( f"{tuple_id}|d-strata|7301" )
+        tie_key = uint64_big_endian( SHA256(payload)[0:8] )   # NOT normalized
+
+    Reimplemented from the amendment prose so that code and specification
+    cannot drift apart unnoticed.
+    """
+    import hashlib
+
+    from tearrl.eval.tuples import _tie_key
+
+    def from_prose(tuple_id: int, seed: int = 7301) -> int:
+        payload = f"{tuple_id}|d-strata|{seed}".encode("ascii")
+        return int.from_bytes(hashlib.sha256(payload).digest()[0:8], "big")
+
+    for tuple_id in (7_300_000, 7_300_777, 7_359_999):
+        assert _tie_key(tuple_id) == from_prose(tuple_id)
+
+    # Frozen values: changing these changes every stratum assignment.
+    assert _tie_key(7_300_000) == 16907307463852234259
+    assert _tie_key(7_300_777) == 5522047550394849889
+
+
 def test_realized_debt_distribution_is_reportable(tuples: STTupleSet) -> None:
     """§4.1 requires the realized d distribution inside each block, because the
     blocks are sampling strata rather than low/middle/high debt bands."""

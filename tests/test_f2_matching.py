@@ -93,6 +93,42 @@ def test_edge_key_is_symmetric_and_stable() -> None:
     assert edge_key(11, 22, seed=1) != edge_key(11, 22, seed=2)
 
 
+def _edge_key_from_amendment_prose(a: int, b: int, seed: int = 7301) -> float:
+    """Independent reimplementation transcribed from Amendment 001 §5.2.
+
+        low, high = sorted(world_seed_a, world_seed_b)
+        payload   = ASCII( f"{low}|{high}|f2-pairing|7301" )
+        digest    = SHA256(payload)
+        u         = uint64_big_endian( digest[0:8] )
+        hash      = u / 2**64
+    """
+    import hashlib
+
+    low, high = sorted((a, b))
+    payload = f"{low}|{high}|f2-pairing|{seed}".encode("ascii")
+    return int.from_bytes(hashlib.sha256(payload).digest()[0:8], "big") / 2**64
+
+
+def test_edge_key_matches_the_amendment_specification_byte_for_byte() -> None:
+    """A prose spec can drift from the code it claims to describe.
+
+    A full SHA-256 digest is 256 bits, so "SHA256(...) / 2^64" is ambiguous
+    until the byte extraction is named. This test reimplements the frozen
+    definition from the amendment text and requires exact agreement, so that
+    changing either one without the other fails CI.
+    """
+    for a, b in ((7_300_000, 7_300_001), (7_300_123, 7_300_999), (11, 22)):
+        assert edge_key(a, b) == _edge_key_from_amendment_prose(a, b)
+        assert edge_key(b, a) == _edge_key_from_amendment_prose(a, b)
+
+
+def test_edge_key_known_answers() -> None:
+    """Frozen values. If these change, the pairing changes, and every reported
+    F2 matching becomes irreproducible against the hashed amendment."""
+    assert edge_key(7_300_000, 7_300_001) == pytest.approx(0.16652944430782102, abs=1e-15)
+    assert edge_key(7_300_123, 7_300_999) == pytest.approx(0.10619930450283636, abs=1e-15)
+
+
 def test_banded_costs_order_two_edges_lexicographically() -> None:
     """The banding orders any TWO INDIVIDUAL EDGES by level 1 first.
 
