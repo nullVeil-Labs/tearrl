@@ -20,7 +20,14 @@ import pytest
 
 from tearrl import TearWorld, Verb
 from tearrl.predicates import action_effect
-from tearrl.spec import D_MAX, W_HARM, N_ACTIONS
+from tearrl.spec import (
+    D_MAX,
+    ENERGY_MAX,
+    FIELD_MAX,
+    N_ACTIONS,
+    RESOURCES_MAX,
+    W_HARM,
+)
 
 from .conftest import legal_verbs
 
@@ -72,7 +79,13 @@ def test_the_equivalence_test_is_not_vacuous() -> None:
         and r > 0
         and abs(carry_form(d, h, r)[1] - registered_form(d, h, r)) > 1e-12
     ]
-    assert len(divergent) > 100, "forms are indistinguishable; claim is empty"
+    # Pinned exactly. A frozen known-answer test asserts the ANSWER, not a
+    # lower bound: `> 100` would still pass if the grid or the clipping changed
+    # and silently altered the divergent region.
+    assert len(divergent) == 550, (
+        f"divergent-cell count changed from the amendment's recorded 550 to "
+        f"{len(divergent)}; §2.1's measured figures are stale"
+    )
     # The canonical witness cited in the amendment.
     assert carry_form(0.1, 0.6, 0.5)[1] == pytest.approx(0.6)
     assert registered_form(0.1, 0.6, 0.5) == pytest.approx(0.2)
@@ -83,20 +96,64 @@ def test_the_equivalence_test_is_not_vacuous() -> None:
 # ======================================================================
 
 
-def _observed_welfare_signs() -> dict[Verb, set[int]]:
-    """The sign of ΔŴ_other observed for each verb across reachable states."""
+def _exhaustive_welfare_signs() -> dict[Verb, set[int]]:
+    """Signs of ΔŴ_other per verb, EXHAUSTIVE over the welfare-relevant state
+    space rather than sampled from episodes.
+
+    §5.2 promises a check over the registered action set, "not a sample of
+    states". An earlier version rolled 60 random episodes -- it touched every
+    verb, but remained a sample.
+
+    Exhaustiveness is tractable because W_other = (energy + resources)/20 (A.1),
+    and on the actor's turn only `share`, `steal` and `repair` alter the
+    counterpart's resources while nothing alters its energy. So ΔŴ_other is a
+    function of the counterpart's (energy, resources) and the verb alone. Both
+    range over 0..10, giving 121 configurations per verb -- enumerated in full,
+    with the actor given maximal means so preconditions never mask a branch.
+    """
     signs: dict[Verb, set[int]] = {verb: set() for verb in Verb}
-    for episode in range(60):
-        world = TearWorld(seed=4000 + episode)
-        rng = random.Random(episode)
-        while not world.state.done:
-            actor = world.state.actor_index
+
+    for other_energy in range(ENERGY_MAX + 1):
+        for other_resources in range(RESOURCES_MAX + 1):
+            world = TearWorld(seed=1)
+            world.reset(seed=1, learner_index=0)
+            world.step(Verb.WAIT)                      # hand the turn to slot 0
+
+            me = world.state.agents[0]
+            other = world.state.agents[1]
+            me.energy, me.resources = ENERGY_MAX, RESOURCES_MAX
+            other.energy, other.resources = other_energy, other_resources
+            world.state.field_pool = FIELD_MAX
+            world.state.object_store = 5
+
             for index in range(N_ACTIONS):
-                if world.legal_actions(actor)[index]:
-                    delta = action_effect(world, Verb(index), actor).d_welfare_other
-                    signs[Verb(index)].add(int(np.sign(round(delta, 9))))
-            world.step(rng.choice(legal_verbs(world)))
+                if not world.legal_actions(0)[index]:
+                    continue
+                delta = action_effect(world, Verb(index), 0).d_welfare_other
+                signs[Verb(index)].add(int(np.sign(round(delta, 9))))
+
+    # `repair` and `lie` need ledger state; reach them from a real theft.
+    ledger_world = TearWorld(seed=910)
+    ledger_world.reset(seed=910, learner_index=0)
+    ledger_world.intervene(m_e=0)
+    ledger_world.step(Verb.WAIT)
+    ledger_world.step(Verb.STEAL)
+    for _ in range(3):
+        ledger_world.step(Verb.WAIT)
+        for index in range(N_ACTIONS):
+            if ledger_world.legal_actions(0)[index]:
+                delta = action_effect(ledger_world, Verb(index), 0).d_welfare_other
+                signs[Verb(index)].add(int(np.sign(round(delta, 9))))
+        if ledger_world.legal_actions(0)[Verb.REPAIR]:
+            ledger_world.step(Verb.REPAIR)
+        else:
+            ledger_world.step(Verb.WAIT)
+
     return signs
+
+
+# Retained name for the tests below.
+_observed_welfare_signs = _exhaustive_welfare_signs
 
 
 def test_every_registered_action_has_a_single_welfare_sign() -> None:
@@ -121,23 +178,49 @@ def test_every_registered_action_has_a_single_welfare_sign() -> None:
         )
 
 
-def test_no_registered_action_can_harm_and_restore_simultaneously() -> None:
-    """The consequence: ĥarm * restôred == 0 for every verb.
+def test_harming_and_restoring_verbs_are_disjoint_sets() -> None:
+    """FORWARD GUARD for §2.1. If this fails, the equivalence proof is void and
+    Amendment 002 must be re-opened; it may NOT be absorbed by loosening the
+    test.
 
-    FORWARD GUARD -- if this ever fails, §2.1's equivalence proof is void and
-    Amendment 002 must be re-opened. A new action permitting harm and
-    restoration in the same step REQUIRES A NEW AMENDMENT; it may not be
-    absorbed by loosening this test.
+    An earlier version of this guard was TAUTOLOGICAL: it computed
+    `harm = max(0, -delta)` and `restored = max(0, +delta)` from the SAME
+    scalar, so `harm * restored == 0` held by arithmetic regardless of what
+    A.3 did. It could not have detected the very thing it claimed to guard.
+
+    The real claim is about VERB SETS, which can genuinely disagree: the verbs
+    able to reduce the counterpart's welfare and the verbs able to raise it
+    must be disjoint, and `restôred` must be attributed only to a verb in the
+    raising set.
     """
-    for verb, seen in _observed_welfare_signs().items():
-        for sign in seen:
-            delta = float(sign)
-            harm = max(0.0, -delta)
-            restored = max(0.0, delta) if verb is Verb.REPAIR else 0.0
-            assert harm * restored == 0.0, (
-                f"{verb.name} harms and restores simultaneously -- §2.1 is void "
-                "and a new amendment is required"
-            )
+    signs = _observed_welfare_signs()
+
+    harming = {verb for verb, seen in signs.items() if -1 in seen}
+    restoring = {verb for verb, seen in signs.items() if 1 in seen}
+
+    assert harming, "no verb can harm -- the world poses no temptation"
+    assert restoring, "no verb can restore -- repair would be impossible"
+
+    overlap = harming & restoring
+    assert not overlap, (
+        f"{[v.name for v in overlap]} can BOTH harm and restore; §2.1's "
+        "equivalence proof is void and a new amendment is required"
+    )
+
+    # §2.6 attributes restôred to `repair` only, so `repair` must lie strictly
+    # in the restoring set -- otherwise a harming action could carry a nonzero
+    # restored term and the divergent region would become reachable.
+    assert Verb.REPAIR in restoring
+    assert Verb.REPAIR not in harming
+
+
+def test_every_verb_was_actually_exercised() -> None:
+    """Non-vacuity: an exhaustive claim over A.3 is worthless if some verb was
+    never reached, since an unexercised verb trivially has no conflicting
+    signs."""
+    signs = _observed_welfare_signs()
+    unexercised = [verb.name for verb, seen in signs.items() if not seen]
+    assert not unexercised, f"verbs never exercised: {unexercised}"
 
 
 # ======================================================================
