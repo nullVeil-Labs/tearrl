@@ -72,6 +72,29 @@ def equalizing_width(input_dim: int, output_dim: int, target: int) -> int:
     return min(candidates, key=lambda h: abs(parameter_budget(input_dim, h, output_dim) - target))
 
 
+class EmptyActionMask(ValueError):
+    """Raised when a state offers no feasible action.
+
+    A.3 gives `wait` no precondition, so a world-generated mask is never empty.
+    That is an invariant of the environment, not of the tensor boundary: a
+    hand-built probe, a batching bug or a corrupted restore can still deliver
+    an all-false row, and the failure mode is silent -- all logits become -inf,
+    softmax returns NaN, and the NaN reaches the optimizer looking like a
+    learning-rate problem. Failing loudly here converts that into a stack trace.
+    """
+
+
+def assert_feasible_mask(mask: torch.Tensor) -> None:
+    """Every row must offer at least one feasible action."""
+    if mask.numel() == 0 or not bool(mask.any(dim=-1).all()):
+        empty = (~mask.any(dim=-1)).nonzero().flatten().tolist()
+        raise EmptyActionMask(
+            f"action mask has no feasible action in row(s) {empty[:8]}; "
+            "A.3 guarantees `wait` is always legal, so this mask did not come "
+            "from the environment"
+        )
+
+
 def _mlp(input_dim: int, hidden: int, output_dim: int) -> nn.Sequential:
     return nn.Sequential(
         nn.Linear(input_dim, hidden),
@@ -103,6 +126,7 @@ class Selector(nn.Module):
         q_other: torch.Tensor,       # [B, 4]
         mask: torch.Tensor,          # [B, |A|] bool
     ) -> torch.Tensor:
+        assert_feasible_mask(mask)
         batch, n_actions, _ = witness_out.shape
         c_rows = c.unsqueeze(1).expand(batch, n_actions, C_DIM)
         q_rows = q_other.unsqueeze(1).expand(batch, n_actions, Q_DIM)
@@ -129,6 +153,7 @@ class PolicyNet(nn.Module):
     def forward(
         self, obs: torch.Tensor, q_other: torch.Tensor, mask: torch.Tensor
     ) -> torch.Tensor:
+        assert_feasible_mask(mask)
         logits = self.net(torch.cat([obs, q_other], dim=-1))
         return logits.masked_fill(~mask, float("-inf"))
 
@@ -155,7 +180,23 @@ class C3IMPolicy(nn.Module):
         q_other: torch.Tensor,       # [B, 4]
         mask: torch.Tensor,          # [B, |A|] bool
     ) -> torch.Tensor:
-        flat = witness_out.reshape(witness_out.shape[0], -1)
+        assert_feasible_mask(mask)
+        # REPLACE the infeasible witness rows before flattening -- do not
+        # multiply by the mask.
+        #
+        # §2.4 masks infeasible actions and leaves them UNTRAINED, so those nine
+        # channels carry undefined values. Flattening them raw let arbitrary
+        # garbage in rows the agent cannot even select move the FEASIBLE action
+        # probabilities -- measured at 6.3% on a random C3-IM. Since C3-IM is
+        # the frozen headline comparator for G2, its behaviour would have partly
+        # depended on noise. C6's selector never has this exposure: it scores
+        # each row independently and masks infeasible rows out of the softmax.
+        #
+        # Multiplication is NOT sufficient: 0 * NaN = NaN and 0 * inf = NaN, so
+        # a non-finite value in an untrained row would survive the gate and
+        # poison every feasible logit. Same defect class as the entropy NaN.
+        gated = witness_out.masked_fill(~mask.unsqueeze(-1), 0.0)
+        flat = gated.reshape(gated.shape[0], -1)
         logits = self.net(torch.cat([obs, flat, q_other], dim=-1))
         return logits.masked_fill(~mask, float("-inf"))
 

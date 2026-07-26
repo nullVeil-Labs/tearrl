@@ -7,7 +7,16 @@ name = "tearrl"
 version = "0.4.2"
 description = "TearRL: Counterfactual Witness-Coupled Reinforcement Learning (TEARRL-0 v0.4.2-pilot-freeze)"
 requires-python = ">=3.12"
-dependencies = ["numpy>=2.0", "scipy>=1.13"]
+dependencies = [
+    "numpy>=2.0",
+    "scipy>=1.13",
+    # Imported by tearrl.agents.* and tearrl.witness.*; omitting it made a
+    # clean-environment install unable to import the tracked neural modules.
+    "torch>=2.6",
+    # Used by tearrl.eval.f2_matching for general-graph maximum-cardinality
+    # matching (the debt graph is not bipartite).
+    "networkx>=3.0",
+]
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0"]
