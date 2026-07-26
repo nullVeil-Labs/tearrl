@@ -250,12 +250,51 @@ def test_welfare_sign_map_is_exactly_as_registered() -> None:
     assert _observed_welfare_signs() == EXPECTED_WELFARE_SIGNS
 
 
-def test_harming_and_restoring_sets_are_exactly_as_registered() -> None:
+def test_harming_and_positive_welfare_sets_are_exactly_as_registered() -> None:
+    """NOTE THE NAME: this is the POSITIVE-WELFARE set, not the debt-restoring
+    set. `share` raises the counterpart's welfare without discharging debt.
+    See `test_debt_restoration_credit_is_repair_only` for that distinction."""
     signs = _observed_welfare_signs()
     harming = {verb for verb, seen in signs.items() if -1 in seen}
-    restoring = {verb for verb, seen in signs.items() if 1 in seen}
+    positive_welfare = {verb for verb, seen in signs.items() if 1 in seen}
     assert harming == {Verb.STEAL}
-    assert restoring == {Verb.SHARE, Verb.REPAIR}
+    assert positive_welfare == {Verb.SHARE, Verb.REPAIR}
+
+
+def test_debt_restoration_credit_is_repair_only() -> None:
+    """POSITIVE WELFARE is not DEBT RESTORATION. §2.6 attributes `restôred`
+    to the repair transfer alone.
+
+    `share` and `repair` both raise the counterpart's welfare, so both sit in
+    the positive-welfare set. Only `repair` may discharge debt. If `share`
+    earned restoration credit, an agent could steal, hand over unrelated
+    resources, and watch its debt channel clear without ever touching the U
+    record or forfeiting the illicit credit -- the laundering §2.6's same-unit
+    accounting exists to forbid.
+    """
+    from tearrl.conscience import ResponsibilityState
+
+    benefit = np.zeros(9)
+    benefit[2] = +0.4                       # positive ΔŴ_other
+
+    for verb in (Verb.SHARE, Verb.REPAIR):
+        state = ResponsibilityState(d=0.8)
+        state.update(benefit, verb, other_total_welfare_change=0.4)
+        if verb is Verb.REPAIR:
+            assert state.d < 0.8, "repair must discharge debt"
+        else:
+            assert state.d == pytest.approx(0.8), (
+                "share discharged debt -- positive welfare is being credited as "
+                "debt restoration, which permits laundering"
+            )
+
+    # Every other positive-welfare-capable path must also leave debt untouched.
+    for verb in Verb:
+        if verb is Verb.REPAIR:
+            continue
+        state = ResponsibilityState(d=0.5)
+        state.update(benefit, verb, other_total_welfare_change=0.4)
+        assert state.d == pytest.approx(0.5), f"{verb.name} discharged debt"
 
 
 # ======================================================================
