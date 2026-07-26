@@ -104,6 +104,48 @@ def test_generation_is_deterministic() -> None:
         assert (a.s_u, a.s_p, a.s_e, a.s_o) == (b.s_u, b.s_p, b.s_e, b.s_o)
 
 
+def test_pools_are_nested_across_sizes() -> None:
+    """Amendment 001 §5.0 genealogy: the world seed depends only on the
+    candidate index and the seed-7301 stream is consumed in a fixed order, so a
+    smaller pool is a BIT-IDENTICAL PREFIX of a larger one.
+
+    This is what makes the earlier diagnostic censuses exact prefixes of the
+    registered 60,000 pool rather than independent samples.
+    """
+    witness = WitnessEnsemble(INPUT_DIM)
+    witness.eval()
+    small = generate_s_t(witness, n_candidates=150, device="cpu", verbose=False)
+    large = generate_s_t(witness, n_candidates=450, device="cpu", verbose=False)
+
+    assert len(large) > len(small)
+    for a, b in zip(small.tuples, large.tuples[: len(small)]):
+        assert a.world._seed == b.world._seed
+        assert a.prefix_length == b.prefix_length
+        assert (a.s_u, a.s_p, a.s_e, a.s_o) == (b.s_u, b.s_p, b.s_e, b.s_o)
+        assert a.c.d == pytest.approx(b.c.d)
+
+
+def test_d_strata_are_NOT_nested_and_must_be_pool_relative() -> None:
+    """The one quantity that does not nest (Amendment 001 §5.0).
+
+    d-strata are assigned by RANK over the completed pool, so a tuple's block
+    label depends on the whole pool and changes with pool size even though the
+    tuple is identical. Stratum labels are therefore meaningful only relative to
+    a declared pool size, and no analysis may mix them across pools.
+    """
+    witness = WitnessEnsemble(INPUT_DIM)
+    witness.eval()
+    small = generate_s_t(witness, n_candidates=150, device="cpu", verbose=False)
+    large = generate_s_t(witness, n_candidates=450, device="cpu", verbose=False)
+
+    small_labels = [t.d_stratum for t in small.tuples]
+    large_labels = [t.d_stratum for t in large.tuples[: len(small)]]
+    assert small_labels != large_labels, (
+        "strata appear pool-invariant; if rank assignment ever becomes nested "
+        "the §5.0 warning against mixing labels across pools must be revisited"
+    )
+
+
 # ======================================================================
 # probe-set membership (§5.1)
 # ======================================================================
