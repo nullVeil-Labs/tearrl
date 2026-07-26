@@ -32,6 +32,7 @@ notions of "cell" are therefore present, at the stage each belongs to.
 
 from __future__ import annotations
 
+import hashlib
 import random
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -159,7 +160,7 @@ class STTuple:
     prefix_length: int
     monitor_cell: int
     task_opportunity: int
-    d_tercile: int = -1          # assigned after the pool is complete
+    d_stratum: int = -1          # rank-balanced third; assigned after the pool
     s_u: bool = False
     s_p: bool = False
     s_e: bool = False
@@ -190,16 +191,31 @@ class STTupleSet:
 
     def strata_report(self) -> dict[str, dict[int, int]]:
         out: dict[str, dict[int, int]] = {
-            "d_tercile": {}, "monitor_cell": {}, "task_opportunity": {}
+            "d_stratum": {}, "monitor_cell": {}, "task_opportunity": {}
         }
         for item in self.tuples:
             for key, value in (
-                ("d_tercile", item.d_tercile),
+                ("d_stratum", item.d_stratum),
                 ("monitor_cell", item.monitor_cell),
                 ("task_opportunity", item.task_opportunity),
             ):
                 out[key][value] = out[key].get(value, 0) + 1
         return out
+
+    def d_distribution_by_stratum(self) -> dict[int, dict[float, int]]:
+        """Realized d distribution inside each rank-balanced third.
+
+        Required by Amendment 001 §4.1: because the blocks are sampling strata
+        rather than debt bands, the reader must be able to see what debt levels
+        each block actually contains rather than infer 'low/middle/high' from
+        the label.
+        """
+        out: dict[int, dict[float, int]] = {}
+        for item in self.tuples:
+            block = out.setdefault(item.d_stratum, {})
+            value = round(item.c.d, 3)
+            block[value] = block.get(value, 0) + 1
+        return {k: dict(sorted(v.items())) for k, v in sorted(out.items())}
 
 
 # ----------------------------------------------------------------------
@@ -242,28 +258,53 @@ def _rollout_prefix(
     return world, trace
 
 
-def assign_d_terciles(tuple_set: "STTupleSet") -> None:
-    """Assign d-terciles by RANK, not by quantile value (§5.6 stratification).
+STRATA_HASH_DOMAIN: bytes = b"d-strata"
 
-    d is a quantized quantity with a dominant mass point: a single k=3 theft
-    predicts harm 0.5, so a large fraction of tuples share exactly d == 0.5.
-    Quantile cuts then collapse -- q33 and q67 both land on 0.5, the test
-    `d <= lower` swallows everything at or below it, and the MIDDLE TERCILE
-    COMES OUT EMPTY. Stratifying on a variable with two of three cells unused
-    is not stratification.
 
-    Ranking with a stable sort and splitting into three equal-count groups
-    keeps the ordering by d while guaranteeing balanced strata. Tuples sharing
-    a d value may straddle a boundary; that is the standard and unavoidable
-    treatment of ties, and it is preferable to an empty cell.
+def _tie_key(tuple_id: int, seed: int = S_T_GENERATOR_SEED) -> int:
+    """Frozen deterministic tie-break key (Amendment 001 §4.1).
+
+        tie_key = SHA256( tuple_id || "d-strata" || 7301 )
+    """
+    payload = b"|".join(
+        (str(tuple_id).encode(), STRATA_HASH_DOMAIN, str(seed).encode())
+    )
+    return int.from_bytes(hashlib.sha256(payload).digest()[:8], "big")
+
+
+def assign_d_strata(tuple_set: "STTupleSet", seed: int = S_T_GENERATOR_SEED) -> None:
+    """Assign RANK-BALANCED THIRDS on d (§5.6 stratification; Amendment 001 §4.1).
+
+    Two corrections to the obvious implementation, both load-bearing.
+
+    (1) NOT QUANTILE CUTS. d is quantized with a dominant mass point -- a single
+        k=3 theft predicts harm exactly 0.5, and ~72% of tuples sit there. So
+        q33 == q67 == 0.5, the test `d <= lower` swallows everything at or
+        below, and the MIDDLE CELL COMES OUT EMPTY (observed 7508 / 0 / 492).
+        Two of three cells unused is not stratification.
+
+    (2) NOT SORT STABILITY FOR TIES. A stable sort resolves the 72% tie mass by
+        generation order, which may correlate with scripted policy, monitor
+        cell, prefix length or violation type -- quietly contaminating the
+        blocks. Ties are broken by a frozen SHA-256 key instead, so block
+        membership within the mass point is deterministic, reproducible, and
+        independent of anything about how the tuple was generated.
+
+    NAMING: these are rank-balanced thirds, NOT low/middle/high debt bands.
+    Tuples sharing d == 0.5 appear in more than one block, so the blocks are
+    sampling strata rather than distinct debt levels. §13 reports the realized
+    d distribution within each block; see `STTupleSet.d_distribution_by_stratum`.
     """
     items = tuple_set.tuples
     if not items:
         return
-    order = np.argsort([item.c.d for item in items], kind="stable")
+    order = sorted(
+        range(len(items)),
+        key=lambda i: (items[i].c.d, _tie_key(items[i].world._seed, seed)),
+    )
     n = len(order)
     for position, index in enumerate(order):
-        items[index].d_tercile = min(2, (3 * position) // n)
+        items[index].d_stratum = min(2, (3 * position) // n)
 
 
 @torch.no_grad()
@@ -347,7 +388,7 @@ def generate_s_t(
         item.s_o = in_s_o(world, 0)
         tuple_set.tuples.append(item)
 
-    assign_d_terciles(tuple_set)
+    assign_d_strata(tuple_set, seed=seed)
 
     if verbose:
         print(f"S_T: {len(tuple_set):,} tuples from {n_candidates:,} candidates")
