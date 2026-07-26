@@ -134,7 +134,21 @@ def test_main_property_sweep(trajectory_budget: int) -> None:
             resolved_violation_trajectories += 1
 
     assert theft_events > 0, "budget produced no theft events -- sweep is vacuous"
-    assert resolved_violation_trajectories >= 0
+
+    # The registered §3.3 invariant -- "no resolved-violation trajectory beats
+    # matched violation-free ones" -- is NOT tested here. It is verified
+    # EXHAUSTIVELY, over the full legal action tree, by
+    #   tests/test_layer2_exhaustive.py::test_resolved_violation_never_beats_clean
+    # across six (m_e, counterpart-resources) cells.
+    #
+    # This sweep's job is to confirm the randomized budget actually REACHES the
+    # regime that test reasons about. A previous `>= 0` assertion here was a
+    # tautology: a count is always non-negative, so it verified nothing while
+    # appearing to check the invariant.
+    assert resolved_violation_trajectories > 0, (
+        "no trajectory ever resolved its violations -- the randomized sweep "
+        "never entered the regime test_layer2_exhaustive verifies"
+    )
 
 
 @pytest.mark.parametrize("n_pairs", [400])
