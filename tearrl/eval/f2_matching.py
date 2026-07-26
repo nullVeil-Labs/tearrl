@@ -24,9 +24,32 @@ Each tuple appears in at most one pair.
 
 The debt graph is NOT bipartite -- d = 0.0, 0.5, 1.0 are mutually >= 0.5 apart
 and form a triangle -- so general (blossom) matching is required rather than a
-bipartite assignment. Lexicographic preference is encoded as a single scalar
-weight with strictly separated magnitude bands, which reproduces the ordering
-exactly because each level is bounded by its registered tolerance.
+bipartite assignment.
+
+EXACT AGGREGATE -- read this before citing the rule
+---------------------------------------------------
+Each edge carries the scalar banded cost
+
+    cost = W1*|d||c||  +  W2*|d sum|yhat||  +  W3*hash,
+    W1 = 1.0,  W2 = 1e-3,  W3 = 1e-7
+
+and the solver selects a maximum-cardinality matching MINIMIZING THE SUM of
+those costs. So the aggregate is additive, and the banding gives a strict
+lexicographic ordering only BETWEEN INDIVIDUAL EDGES.
+
+It does NOT give a matching-level lexicographic minimum over sorted cost
+vectors. Under the registered tolerances a single edge's level-1 term spans at
+most 0.05 while level-2 contributes up to 5e-4 per edge, so across a
+1,595-pair matching roughly 60 edges of level-2 savings could offset one
+edge's 0.03 level-1 loss. In practice level 1 dominates by two orders of
+magnitude (measured totals ~26.0 vs ~0.30), but dominance is NOT guaranteed
+and must not be claimed.
+
+The frozen rule is therefore: maximum cardinality first, then minimum SUMMED
+banded cost, ties broken by the SHA-256 edge key. That is fully deterministic
+and reproducible, which is what the protocol requires; it is simply not the
+sorted-vector lexicographic minimum, and the distinction is recorded so the
+prose and the implementation cannot drift apart.
 """
 
 from __future__ import annotations
@@ -44,9 +67,9 @@ MIN_DEBT_GAP: float = 0.50
 F2_SEED: int = 7301
 F2_HASH_DOMAIN: bytes = b"f2-pairing"
 
-# Lexicographic weight bands. Level 1 is bounded by C_NORM_TOLERANCE, level 2
-# by YHAT_TOLERANCE, level 3 by 1.0; each band is scaled so that any difference
-# at a higher level dominates every possible total at all lower levels.
+# Banded weights. These order any TWO EDGES lexicographically (level 1, then
+# level 2, then hash). They do NOT make level 1 dominate summed level-2 terms
+# across a whole matching -- see the module docstring. Frozen values.
 _W1, _W2, _W3 = 1.0, 1.0e-3, 1.0e-7
 
 
@@ -116,7 +139,11 @@ def match(
     seeds: np.ndarray,
     n_tuples: int,
 ) -> F2Matching:
-    """Maximum-cardinality, lexicographically-minimal one-to-one matching."""
+    """Maximum-cardinality one-to-one matching of minimum SUMMED banded cost.
+
+    See the module docstring: the aggregate is additive, not a sorted-vector
+    lexicographic minimum.
+    """
     import networkx as nx
 
     graph = nx.Graph()

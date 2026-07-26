@@ -93,9 +93,14 @@ def test_edge_key_is_symmetric_and_stable() -> None:
     assert edge_key(11, 22, seed=1) != edge_key(11, 22, seed=2)
 
 
-def test_lexicographic_preference_favours_tighter_c_norm() -> None:
-    """Level 1 of the ordering must dominate: given a choice, the matching
-    takes the pair with the smaller ||c|| difference."""
+def test_banded_costs_order_two_edges_lexicographically() -> None:
+    """The banding orders any TWO INDIVIDUAL EDGES by level 1 first.
+
+    Note what this does NOT establish: the solver minimizes a SUM, so across a
+    whole matching many small level-2 savings can outweigh one level-1 loss.
+    That limit is documented in the module and in Amendment 001 §5.2 rather
+    than papered over -- see the next test.
+    """
     c_norm = np.array([0.400, 0.401, 0.450])
     yhat = np.array([1.000, 1.000, 1.000])
     debt = np.array([0.0, 0.5, 0.5])
@@ -104,6 +109,26 @@ def test_lexicographic_preference_favours_tighter_c_norm() -> None:
     )
     result = match(edges, np.arange(7_300_000, 7_300_003), n_tuples=3)
     assert result.pairs == [(0, 1)], "did not prefer the tighter ||c|| match"
+
+
+def test_banding_does_not_guarantee_matching_level_lexicographic_order() -> None:
+    """Pins the honest limit of the frozen rule (Amendment 001 §5.2).
+
+    If this ever starts failing, the weights have been separated enough to make
+    level 1 dominate additively -- at which point the amendment's careful
+    disclaimer is understating the guarantee and should be revisited, rather
+    than the test being deleted.
+    """
+    from tearrl.eval.f2_matching import _W1, _W2
+
+    per_edge_level1_span = _W1 * C_NORM_TOLERANCE
+    level2_per_edge_max = _W2 * YHAT_TOLERANCE
+    pairs_at_registered_pool = 1595
+
+    assert level2_per_edge_max * pairs_at_registered_pool > per_edge_level1_span, (
+        "summed level-2 cost can no longer exceed a per-edge level-1 difference; "
+        "the §5.2 disclaimer now understates the guarantee"
+    )
 
 
 def test_coverage_counts_matched_tuples_not_edges() -> None:
