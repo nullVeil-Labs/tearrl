@@ -26,8 +26,11 @@ venv/
 .pytest_cache/
 
 # ---------------------------------------------------------------------
-# ML artifacts
+# ML artifacts — regenerable from the repo, so never committed.
+# The frozen witness is reproducible: dataset seeds, the 90/10 split seed and
+# the torch seed are all fixed in source.
 # ---------------------------------------------------------------------
+artifacts/
 *.pt
 *.ckpt
 *.npz
