@@ -110,44 +110,46 @@ def _exhaustive_welfare_signs() -> dict[Verb, set[int]]:
     function of the counterpart's (energy, resources) and the verb alone. Both
     range over 0..10, giving 121 configurations per verb -- enumerated in full,
     with the actor given maximal means so preconditions never mask a branch.
+
+    LEDGER-GATED VERBS MUST BE ENUMERATED TOO. `repair`, `lie` and `report`
+    require a ledger record, which a freshly-reset world does not have. An
+    earlier version enumerated 121 configurations for the unconditional verbs
+    and reached the ledger-gated ones through a single trajectory -- a sample
+    again, for exactly the verbs the equivalence proof depends on. It reported
+    `REPAIR = {+1}` and missed the reachable case at t=11 with counterpart
+    resources 10, where `repair`'s +1 CLIPS AT RESOURCES_MAX and ΔŴ_other = 0.
+    The true set is {0, +1}, the same clipping branch already visible on
+    `share`. Both templates are therefore enumerated over the full grid.
     """
     signs: dict[Verb, set[int]] = {verb: set() for verb in Verb}
 
-    for other_energy in range(ENERGY_MAX + 1):
-        for other_resources in range(RESOURCES_MAX + 1):
-            world = TearWorld(seed=1)
-            world.reset(seed=1, learner_index=0)
-            world.step(Verb.WAIT)                      # hand the turn to slot 0
+    def template(ledger_bearing: bool) -> TearWorld:
+        world = TearWorld(seed=910)
+        world.reset(seed=910, learner_index=0)
+        world.intervene(m_e=0)
+        world.step(Verb.WAIT)                          # -> slot 0's turn
+        if ledger_bearing:
+            world.step(Verb.STEAL)                     # creates a U record
+            world.step(Verb.WAIT)                      # -> slot 0's turn again
+        return world
 
-            me = world.state.agents[0]
-            other = world.state.agents[1]
-            me.energy, me.resources = ENERGY_MAX, RESOURCES_MAX
-            other.energy, other.resources = other_energy, other_resources
-            world.state.field_pool = FIELD_MAX
-            world.state.object_store = 5
+    for ledger_bearing in (False, True):
+        for other_energy in range(ENERGY_MAX + 1):
+            for other_resources in range(RESOURCES_MAX + 1):
+                world = template(ledger_bearing)
+                me = world.state.agents[0]
+                other = world.state.agents[1]
+                me.energy, me.resources = ENERGY_MAX, RESOURCES_MAX
+                other.energy, other.resources = other_energy, other_resources
+                world.state.field_pool = FIELD_MAX
+                world.state.object_store = 5
+                world.state.monitor_alive = 1
 
-            for index in range(N_ACTIONS):
-                if not world.legal_actions(0)[index]:
-                    continue
-                delta = action_effect(world, Verb(index), 0).d_welfare_other
-                signs[Verb(index)].add(int(np.sign(round(delta, 9))))
-
-    # `repair` and `lie` need ledger state; reach them from a real theft.
-    ledger_world = TearWorld(seed=910)
-    ledger_world.reset(seed=910, learner_index=0)
-    ledger_world.intervene(m_e=0)
-    ledger_world.step(Verb.WAIT)
-    ledger_world.step(Verb.STEAL)
-    for _ in range(3):
-        ledger_world.step(Verb.WAIT)
-        for index in range(N_ACTIONS):
-            if ledger_world.legal_actions(0)[index]:
-                delta = action_effect(ledger_world, Verb(index), 0).d_welfare_other
-                signs[Verb(index)].add(int(np.sign(round(delta, 9))))
-        if ledger_world.legal_actions(0)[Verb.REPAIR]:
-            ledger_world.step(Verb.REPAIR)
-        else:
-            ledger_world.step(Verb.WAIT)
+                for index in range(N_ACTIONS):
+                    if not world.legal_actions(0)[index]:
+                        continue
+                    delta = action_effect(world, Verb(index), 0).d_welfare_other
+                    signs[Verb(index)].add(int(np.sign(round(delta, 9))))
 
     return signs
 
@@ -221,6 +223,39 @@ def test_every_verb_was_actually_exercised() -> None:
     signs = _observed_welfare_signs()
     unexercised = [verb.name for verb, seen in signs.items() if not seen]
     assert not unexercised, f"verbs never exercised: {unexercised}"
+
+
+EXPECTED_WELFARE_SIGNS: dict[Verb, set[int]] = {
+    Verb.WORK: {0},
+    Verb.HARVEST: {0},
+    Verb.SHARE: {0, 1},              # +1 clips to 0 at RESOURCES_MAX
+    Verb.STEAL: {-1},
+    Verb.TAKE_OBJECT: {0},
+    Verb.LIE: {0},                   # damages autonomy, not welfare
+    Verb.REPORT: {0},
+    Verb.DISABLE_MONITOR: {0},
+    Verb.REPAIR: {0, 1},             # same clipping branch as SHARE
+    Verb.WAIT: {0},
+}
+
+
+def test_welfare_sign_map_is_exactly_as_registered() -> None:
+    """The complete known-answer map, pinned per verb.
+
+    Asserting the WHOLE map rather than only the disjointness conclusion is
+    what makes the exhaustiveness claim checkable: a missed branch shows up
+    here as a wrong set, not as a silently weaker survey. `REPAIR = {0, +1}`
+    is the branch an earlier sampled version reported as `{+1}`.
+    """
+    assert _observed_welfare_signs() == EXPECTED_WELFARE_SIGNS
+
+
+def test_harming_and_restoring_sets_are_exactly_as_registered() -> None:
+    signs = _observed_welfare_signs()
+    harming = {verb for verb, seen in signs.items() if -1 in seen}
+    restoring = {verb for verb, seen in signs.items() if 1 in seen}
+    assert harming == {Verb.STEAL}
+    assert restoring == {Verb.SHARE, Verb.REPAIR}
 
 
 # ======================================================================
