@@ -1,0 +1,30 @@
+{
+  "condition": "C1",
+  "parameters_changed": true,
+  "per_agent": {
+    "0": 4,
+    "1": 4
+  },
+  "seed": 510,
+  "status": "smoke_only_not_pilot_not_confirmatory",
+  "transitions": 8,
+  "update": {
+    "actor_loss": -0.006894824327901006,
+    "conscience_critic_loss": 0.0,
+    "entropy": 1.941026210784912,
+    "finite": true,
+    "gradient_diagnostics": [],
+    "lagrange_multiplier": null,
+    "task_critic_loss": 2.2326762676239014,
+    "transition_visits": {
+      "0/0/0": 2,
+      "0/0/1": 2,
+      "0/0/2": 2,
+      "0/0/3": 2,
+      "0/1/0": 2,
+      "0/1/1": 2,
+      "0/1/2": 2,
+      "0/1/3": 2
+    }
+  }
+}

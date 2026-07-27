@@ -15,15 +15,34 @@ from .networks import (
     parameter_budget,
 )
 
+from .trainer import (
+    Condition,
+    ConditionRuntime,
+    ProtocolDecisionRequired,
+    RolloutCollector,
+    TrainerConfig,
+    prepare_batch,
+    run_smoke,
+    update,
+)
+
 __all__ = [
     "C3IMPolicy",
+    "Condition",
+    "ConditionRuntime",
     "Critic",
     "FrozenResponsibility",
     "LearnedPolicy",
     "PolicyInput",
     "PolicyNet",
+    "ProtocolDecisionRequired",
+    "RolloutCollector",
     "Selector",
+    "TrainerConfig",
     "equalizing_width",
     "parameter_budget",
     "policy_input",
+    "prepare_batch",
+    "run_smoke",
+    "update",
 ]
