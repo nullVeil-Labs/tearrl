@@ -11,3 +11,5 @@
 docs/cc_prereg.md -text
 docs/cc_implementation.md -text
 docs/cc_v*_prereg.md -text
+docs/cgs_prereg.md -text
+docs/cgs_implementation.md -text
