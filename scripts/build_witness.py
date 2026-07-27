@@ -72,8 +72,6 @@ def main() -> int:
     print(report.describe())
 
     witness_path = args.out / "witness_frozen.pt"
-    freeze(ensemble, witness_path, report)
-
     metadata = {
         "episodes": args.episodes,
         "unique_states": dataset.n_states,
@@ -88,7 +86,6 @@ def main() -> int:
         json.dumps(metadata, indent=2) + "\n", encoding="utf-8"
     )
 
-    print(f"\nwrote {witness_path}")
     print(f"wrote {args.out / 'witness_freeze_report.json'}")
 
     if not report.frozen:
@@ -98,7 +95,10 @@ def main() -> int:
         )
         return 1
 
-    print("\nWitness frozen. §2.3(4): copy this identical file into C3-IM, C4, C5, C6.")
+    freeze(ensemble, witness_path, report)
+    print(f"\nwrote {witness_path}")
+    print("Witness frozen. §2.3(4): copy this identical file into C3-IM, C4, C5, C6.")
+
     return 0
 
 

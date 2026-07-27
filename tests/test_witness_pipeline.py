@@ -247,3 +247,65 @@ def test_frozen_witness_round_trip(tmp_path) -> None:
         after = reloaded.predict(x.to(next(reloaded.parameters()).device))
     assert torch.allclose(before, after.cpu(), atol=1e-6)
     assert all(not p.requires_grad for p in reloaded.parameters()), "witness is not frozen"
+
+
+def _failing_freeze_report():
+    from tearrl.witness.train import FreezeReport
+
+    return FreezeReport(
+        within_half_bin=0.0,
+        per_channel_within_half_bin=[0.0] * 5,
+        max_abs_error=1.0,
+        recall={e: 0.0 for e in ("U", "E", "O", "irr")},
+        fpr={e: 1.0 for e in ("U", "E", "O", "irr")},
+        n_pairs=1,
+    )
+
+
+def test_failed_witness_cannot_be_frozen(tmp_path) -> None:
+    from tearrl.witness.train import freeze
+
+    path = tmp_path / "failed.pt"
+    with pytest.raises(ValueError, match="failed the freeze criteria"):
+        freeze(WitnessEnsemble(INPUT_DIM), path, _failing_freeze_report())
+    assert not path.exists()
+    assert not list(tmp_path.glob(".failed.pt.*.tmp"))
+
+
+@pytest.mark.parametrize("claimed_frozen", [False, True])
+def test_loader_rejects_failed_witness_even_if_flag_is_forged(
+    tmp_path, claimed_frozen: bool
+) -> None:
+    from dataclasses import asdict
+
+    from tearrl.witness.train import load_frozen_witness
+
+    ensemble = WitnessEnsemble(INPUT_DIM)
+    path = tmp_path / f"forged-{claimed_frozen}.pt"
+    torch.save(
+        {
+            "state_dict": ensemble.state_dict(),
+            "input_dim": ensemble.input_dim,
+            "ensemble_size": len(ensemble.members),
+            "freeze_report": asdict(_failing_freeze_report()),
+            "frozen": claimed_frozen,
+        },
+        path,
+    )
+
+    message = (
+        "did not pass freeze criteria"
+        if not claimed_frozen
+        else "freeze report fails criteria"
+    )
+    with pytest.raises(ValueError, match=message):
+        load_frozen_witness(path, device="cpu")
+
+
+def test_loader_rejects_incomplete_witness_checkpoint(tmp_path) -> None:
+    from tearrl.witness.train import load_frozen_witness
+
+    path = tmp_path / "incomplete.pt"
+    torch.save({"frozen": True}, path)
+    with pytest.raises(ValueError, match="invalid frozen-witness checkpoint"):
+        load_frozen_witness(path, device="cpu")

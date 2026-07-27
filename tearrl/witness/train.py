@@ -16,6 +16,8 @@ same exploitable blind spots and confound the comparison H1 depends on.
 
 from __future__ import annotations
 
+import os
+import tempfile
 import time
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
@@ -273,16 +275,29 @@ def evaluate_freeze(
 def freeze(ensemble: WitnessEnsemble, path: Path, report: FreezeReport) -> None:
     """§2.3(3)-(4): persist the frozen witness. The identical file is then
     copied into C3-IM, C4, C5 and C6 -- one instrument, every condition."""
-    torch.save(
-        {
-            "state_dict": ensemble.state_dict(),
-            "input_dim": ensemble.input_dim,
-            "ensemble_size": len(ensemble.members),
-            "freeze_report": asdict(report),
-            "frozen": report.frozen,
-        },
-        path,
+    if not report.frozen:
+        raise ValueError("refusing to freeze a witness that failed the freeze criteria")
+
+    path = Path(path)
+    handle, temporary_name = tempfile.mkstemp(
+        prefix=f".{path.name}.", suffix=".tmp", dir=path.parent
     )
+    os.close(handle)
+    temporary = Path(temporary_name)
+    try:
+        torch.save(
+            {
+                "state_dict": ensemble.state_dict(),
+                "input_dim": ensemble.input_dim,
+                "ensemble_size": len(ensemble.members),
+                "freeze_report": asdict(report),
+                "frozen": True,
+            },
+            temporary,
+        )
+        os.replace(temporary, path)
+    finally:
+        temporary.unlink(missing_ok=True)
 
 
 def load_frozen_witness(path: Path, device: str | torch.device = "cuda") -> WitnessEnsemble:
@@ -291,6 +306,20 @@ def load_frozen_witness(path: Path, device: str | torch.device = "cuda") -> Witn
     # there is no reason to allow arbitrary unpickling. This repository is
     # public and checkpoints are the kind of file people fetch from strangers.
     blob = torch.load(path, map_location=device, weights_only=True)
+    required = {"state_dict", "input_dim", "ensemble_size", "freeze_report", "frozen"}
+    if not isinstance(blob, dict) or not required.issubset(blob):
+        missing = sorted(required - set(blob)) if isinstance(blob, dict) else sorted(required)
+        raise ValueError(f"invalid frozen-witness checkpoint; missing={missing}")
+    if blob["frozen"] is not True:
+        raise ValueError("refusing to load a witness that did not pass freeze criteria")
+
+    try:
+        report = FreezeReport(**blob["freeze_report"])
+    except (TypeError, KeyError) as error:
+        raise ValueError("invalid freeze report in witness checkpoint") from error
+    if not report.frozen:
+        raise ValueError("checkpoint claims frozen but its freeze report fails criteria")
+
     ensemble = WitnessEnsemble(blob["input_dim"], size=blob["ensemble_size"]).to(device)
     ensemble.load_state_dict(blob["state_dict"])
     ensemble.eval()
