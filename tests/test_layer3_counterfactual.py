@@ -1,8 +1,8 @@
 """
-§3.3 verification layer 3 -- exhaustive one-step counterfactual-equals-
-simulation tests.
+§3.3 verification layer 3 -- sampled-state, exhaustive-action one-step
+counterfactual-equals-simulation tests.
 
-For every reachable state and every feasible action, the predicted one-step
+For sampled reachable states and every feasible action, the predicted one-step
 consequence (`predicates.action_effect`, the oracle the witness targets are
 built from) must equal what actually happens when the action is simulated.
 
@@ -119,18 +119,40 @@ def test_infeasible_actions_report_infeasible_not_zero_effect() -> None:
     assert action_effect(world, Verb.WAIT).feasible
 
 
-def test_do_intervention_leaves_rng_unconsumed() -> None:
-    """Under do(m_c=v)/do(m_e=v) the draw is replaced, not sampled-then-
-    overwritten, so CRN-paired clones stay aligned on every later draw (§7)."""
+@pytest.mark.parametrize(
+    ("draw_name", "force_name"),
+    [("_draw_mc", "force_m_c"), ("_draw_me", "force_m_e")],
+)
+def test_do_intervention_replaces_draw_without_consuming_rng(
+    draw_name: str, force_name: str
+) -> None:
+    """Forced draws consume nothing; natural draws demonstrably consume once."""
     base = TearWorld(seed=802)
-    base.step(Verb.WAIT)
+    forced = base.clone()
+    setattr(forced, force_name, 1)
+    before = forced.rng.getstate()
+    assert getattr(forced, draw_name)() == 1
+    assert forced.rng.getstate() == before
 
-    forced = base.clone().intervene(m_e=1)
     free = base.clone()
+    setattr(free, force_name, None)
+    before = free.rng.getstate()
+    getattr(free, draw_name)()
+    assert free.rng.getstate() != before, "natural draw did not consume RNG"
 
-    forced.step(Verb.WAIT)
-    free.step(Verb.WAIT)
 
-    # The forced world must not have burned an RNG draw on m_e.
-    assert forced.rng.getstate() != free.rng.getstate() or forced.state.m_e == free.state.m_e
-    assert forced.state.m_e == 1
+def test_paired_enforcement_interventions_remain_aligned_after_release() -> None:
+    base = TearWorld(seed=803)
+    quiet = base.clone().intervene(m_e=0)
+    loud = base.clone().intervene(m_e=1)
+    quiet.step(Verb.WAIT)
+    loud.step(Verb.WAIT)
+    assert quiet.state.m_e == 0 and loud.state.m_e == 1
+    assert quiet.rng.getstate() == loud.rng.getstate()
+
+    quiet.intervene(m_e=None)
+    loud.intervene(m_e=None)
+    quiet.step(Verb.WAIT)
+    loud.step(Verb.WAIT)
+    assert quiet.state.m_e == loud.state.m_e
+    assert quiet.rng.getstate() == loud.rng.getstate()

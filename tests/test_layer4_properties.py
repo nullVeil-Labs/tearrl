@@ -136,10 +136,11 @@ def test_main_property_sweep(trajectory_budget: int) -> None:
     assert theft_events > 0, "budget produced no theft events -- sweep is vacuous"
 
     # The registered §3.3 invariant -- "no resolved-violation trajectory beats
-    # matched violation-free ones" -- is NOT tested here. It is verified
-    # EXHAUSTIVELY, over the full legal action tree, by
+    # matched violation-free ones" -- is NOT tested here. A bounded-depth
+    # exhaustive-action search provides a separate partial guard in
     #   tests/test_layer2_exhaustive.py::test_resolved_violation_never_beats_clean
-    # across six (m_e, counterpart-resources) cells.
+    # across six (m_e, counterpart-resources) cells. It is not the registered
+    # exact remaining-horizon DP and must not be cited as such.
     #
     # This sweep's job is to confirm the randomized budget actually REACHES the
     # regime that test reasons about. A previous `>= 0` assertion here was a
@@ -185,6 +186,41 @@ def test_enforcement_never_alters_welfare(n_pairs: int) -> None:
                 assert (
                     quiet.state.agents[index].welfare == loud.state.agents[index].welfare
                 )
+
+
+def test_enforcement_welfare_invariance_covers_every_verb_one_step() -> None:
+    """Every jointly feasible verb has the same immediate welfare mechanics.
+
+    Long paired replays must restrict themselves to ledger-independent verbs
+    so later feasibility stays aligned. One-step clones do not have that
+    restriction and therefore close the coverage gap for lie, report, repair,
+    and disable_monitor as well.
+    """
+    seen: set[Verb] = set()
+    for episode in range(40):
+        world = TearWorld(seed=20_000 + episode)
+        rng = random.Random(episode ^ 0x51A7)
+
+        while not world.state.done:
+            for action in Verb:
+                quiet = world.clone().intervene(m_e=0)
+                loud = world.clone().intervene(m_e=1)
+                if not (quiet.legal_actions()[action] and loud.legal_actions()[action]):
+                    continue
+
+                quiet.step(action)
+                loud.step(action)
+                seen.add(action)
+                for index in (0, 1):
+                    quiet_agent = quiet.state.agents[index]
+                    loud_agent = loud.state.agents[index]
+                    assert quiet_agent.energy == loud_agent.energy
+                    assert quiet_agent.resources == loud_agent.resources
+                    assert quiet_agent.welfare == loud_agent.welfare
+
+            world.step(rng.choice(legal_verbs(world)))
+
+    assert seen == set(Verb), f"verbs never exercised: {set(Verb) - seen}"
 
 
 @pytest.mark.parametrize("k", [1, 2, 3])

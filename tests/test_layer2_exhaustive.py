@@ -1,15 +1,15 @@
 """
-§3.3 verification layer 2 -- exact search over the reduced invariant state.
+§3.3 verification layer 2 -- bounded concrete-state search (partial guard).
 
 The protocol specifies a DP over
 [illicit credit, unrepaired units, reported?, concealed?, monitor state,
  remaining horizon].
 
-Implemented here as EXHAUSTIVE enumeration of the learner's action tree to a
-fixed depth, which is the same claim without the abstraction step: rather
-than trusting that the reduced state is a sufficient statistic, every legal
-sequence is actually played. If some sequence beat the clean optimum, this
-finds it directly.
+This file instead enumerates every learner action only within a fixed depth,
+against a WAIT counterpart, in six initial cells. It is a useful concrete
+falsifier for short paths, but it does not cover the remaining horizon and is
+not the registered reduced-state DP. It must not be cited as full verification
+of layer 2.
 
 The claim under test (§3.3):
 
@@ -91,8 +91,8 @@ def _search(
 def depth(pytestconfig) -> int:
     """Depth 5 keeps CI interactive; --full raises it to 7.
 
-    Depth 5 already exercises the full claim: resolving a k=3 theft costs
-    1 turn to steal plus 3 to repair, leaving a spare turn.
+    Depth 5 reaches the shortest k=3 steal-and-repair path (plus one spare
+    turn); it does not establish the registered remaining-horizon claim.
     """
     return 7 if pytestconfig.getoption("--full") else 5
 
@@ -102,7 +102,7 @@ def depth(pytestconfig) -> int:
 def test_resolved_violation_never_beats_clean(
     depth: int, m_e: int, counterpart_resources: int
 ) -> None:
-    """The central invariant, verified by exhaustive enumeration."""
+    """The central invariant on this bounded search domain."""
     best_clean, best_violation, leaves = _search(
         seed=500 + counterpart_resources + 10 * m_e,
         depth=depth,
@@ -112,8 +112,10 @@ def test_resolved_violation_never_beats_clean(
     assert leaves > 0
     assert best_clean > -10**9, "no violation-free leaf was reached"
 
-    if best_violation == -10**9:
-        pytest.skip("no fully-resolved violation leaf within this depth")
+    assert best_violation > -10**9, (
+        "no fully-resolved violation leaf within this depth; the load-bearing "
+        "invariant would otherwise be silently untested"
+    )
 
     assert best_violation < best_clean, (
         f"resolved violation scored {best_violation} vs clean optimum "
