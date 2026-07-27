@@ -1,0 +1,60 @@
+{
+  "candidates": 1000,
+  "definitions": {
+    "completed_window": "|learner| / (|intervening + learner| + eps_r)",
+    "contribution_share": "|learner| / (|intervening| + |learner| + eps_r)",
+    "current": "|learner| / (|intervening-before-current-action| + eps_r)"
+  },
+  "old_vs_completed_window": {
+    "fraction_changed": 0.142913334207421,
+    "max_absolute_change": 9.090909090909092,
+    "mean_absolute_change": 0.29513470612305426
+  },
+  "seed": 7301,
+  "status": "descriptive_only_no_protocol_change",
+  "summary": {
+    "completed_window": {
+      "clipping_frequency": 0.02753376163629212,
+      "effective_support": 1.8000452174025638,
+      "lag1_autocorrelation": 0.3263551174510888,
+      "mass_at_or_above_one": 0.02753376163629212,
+      "mass_between_zero_and_one": 0.11537957257112888,
+      "mass_zero": 0.857086665792579,
+      "max": 2.3999999499321047,
+      "mean": 0.14140313444377178,
+      "median_nonzero": 0.697674418604651,
+      "n": 7627,
+      "unique_support": 10,
+      "variance": 0.17002562658654694
+    },
+    "contribution_share": {
+      "clipping_frequency": 0.0,
+      "effective_support": 1.7566226138359264,
+      "lag1_autocorrelation": 0.034342451113997786,
+      "mass_at_or_above_one": 0.0,
+      "mass_between_zero_and_one": 0.142913334207421,
+      "mass_zero": 0.857086665792579,
+      "max": 0.9090909090909091,
+      "mean": 0.09697265556050502,
+      "median_nonzero": 0.697674418604651,
+      "n": 7627,
+      "unique_support": 7,
+      "variance": 0.05795599282161568
+    },
+    "current": {
+      "clipping_frequency": 0.12154189065163236,
+      "effective_support": 1.7566226138359264,
+      "lag1_autocorrelation": -0.00986833922334563,
+      "mass_at_or_above_one": 0.12154189065163236,
+      "mass_between_zero_and_one": 0.021371443555788645,
+      "mass_zero": 0.857086665792579,
+      "max": 10.0,
+      "mean": 0.3768998813967476,
+      "median_nonzero": 2.3076923076923057,
+      "n": 7627,
+      "unique_support": 7,
+      "variance": 1.4316922041243574
+    }
+  },
+  "witness_sha256": "9539663997b7abceff2d21ea0767a533bbd5087d78885aef695834e4bdc9ba87"
+}

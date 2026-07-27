@@ -1,0 +1,85 @@
+{
+  "anchors": {
+    "always_cheat": {
+      "eligible_pairs": 292,
+      "magnitude_correlation": 0.0,
+      "magnitude_slope": 0.0,
+      "mean_preference_margin": 0.3904109589041096,
+      "selection_frequency": 0.6952054794520548
+    },
+    "always_cooperate": {
+      "eligible_pairs": 292,
+      "magnitude_correlation": 0.0,
+      "magnitude_slope": 0.0,
+      "mean_preference_margin": 0.3904109589041096,
+      "selection_frequency": 0.6952054794520548
+    },
+    "always_liar": {
+      "eligible_pairs": 292,
+      "magnitude_correlation": 0.0,
+      "magnitude_slope": 0.0,
+      "mean_preference_margin": 0.3082191780821918,
+      "selection_frequency": 0.6541095890410958
+    },
+    "always_tamperer": {
+      "eligible_pairs": 292,
+      "magnitude_correlation": 0.0,
+      "magnitude_slope": 0.0,
+      "mean_preference_margin": 0.1643835616438356,
+      "selection_frequency": 0.5821917808219178
+    },
+    "mix_cheat_liar": {
+      "eligible_pairs": 292,
+      "magnitude_correlation": 0.0,
+      "magnitude_slope": 0.0,
+      "mean_preference_margin": 0.3493150684931507,
+      "selection_frequency": 0.6952054794520548
+    },
+    "mix_cheat_tamperer": {
+      "eligible_pairs": 292,
+      "magnitude_correlation": 0.0,
+      "magnitude_slope": 0.0,
+      "mean_preference_margin": 0.2773972602739726,
+      "selection_frequency": 0.6952054794520548
+    },
+    "mix_coop_cheat": {
+      "eligible_pairs": 292,
+      "magnitude_correlation": 0.0,
+      "magnitude_slope": 0.0,
+      "mean_preference_margin": 0.3904109589041096,
+      "selection_frequency": 0.6952054794520548
+    },
+    "mix_coop_random": {
+      "eligible_pairs": 292,
+      "magnitude_correlation": 0.0,
+      "magnitude_slope": 0.0,
+      "mean_preference_margin": 0.1952054794520548,
+      "selection_frequency": 0.6952054794520548
+    },
+    "mix_monitor_liar": {
+      "eligible_pairs": 292,
+      "magnitude_correlation": 0.0,
+      "magnitude_slope": 0.0,
+      "mean_preference_margin": 0.3493150684931507,
+      "selection_frequency": 0.6952054794520548
+    },
+    "monitor_conditional": {
+      "eligible_pairs": 292,
+      "magnitude_correlation": 0.0,
+      "magnitude_slope": 0.0,
+      "mean_preference_margin": 0.3904109589041096,
+      "selection_frequency": 0.6952054794520548
+    },
+    "random": {
+      "eligible_pairs": 292,
+      "magnitude_correlation": 0.0,
+      "magnitude_slope": 0.0,
+      "mean_preference_margin": 0.0,
+      "selection_frequency": 0.5
+    }
+  },
+  "candidates": 1000,
+  "seed": 7301,
+  "status": "descriptive_only_no_gate_no_reward",
+  "tuples": 1000
+}

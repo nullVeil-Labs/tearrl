@@ -1,0 +1,268 @@
+{
+  "status": "non_registered_schema_diagnostic",
+  "registered_60000_pool_regenerated": false,
+  "candidates": 1000,
+  "tuples": 1000,
+  "membership": {
+    "S_U": 145,
+    "S_P": 70,
+    "S_E": 141,
+    "S_O": 141
+  },
+  "debt_distribution": {
+    "0.0": 196,
+    "0.1": 6,
+    "0.2": 1,
+    "0.3": 21,
+    "0.5": 727,
+    "0.6": 2,
+    "0.7": 5,
+    "0.8": 24,
+    "1.0": 18
+  },
+  "census": [
+    {
+      "c_norm_tol": 0.05,
+      "yhat_tol": 0.5,
+      "min_debt_gap": 0.2,
+      "candidate_edges": 35,
+      "matched_pairs": 12,
+      "tuples_used": 24,
+      "coverage": 0.024
+    },
+    {
+      "c_norm_tol": 0.05,
+      "yhat_tol": 0.5,
+      "min_debt_gap": 0.3,
+      "candidate_edges": 33,
+      "matched_pairs": 10,
+      "tuples_used": 20,
+      "coverage": 0.02
+    },
+    {
+      "c_norm_tol": 0.05,
+      "yhat_tol": 0.5,
+      "min_debt_gap": 0.5,
+      "candidate_edges": 26,
+      "matched_pairs": 6,
+      "tuples_used": 12,
+      "coverage": 0.012
+    },
+    {
+      "c_norm_tol": 0.05,
+      "yhat_tol": 1.0,
+      "min_debt_gap": 0.2,
+      "candidate_edges": 73,
+      "matched_pairs": 15,
+      "tuples_used": 30,
+      "coverage": 0.03
+    },
+    {
+      "c_norm_tol": 0.05,
+      "yhat_tol": 1.0,
+      "min_debt_gap": 0.3,
+      "candidate_edges": 60,
+      "matched_pairs": 13,
+      "tuples_used": 26,
+      "coverage": 0.026
+    },
+    {
+      "c_norm_tol": 0.05,
+      "yhat_tol": 1.0,
+      "min_debt_gap": 0.5,
+      "candidate_edges": 49,
+      "matched_pairs": 7,
+      "tuples_used": 14,
+      "coverage": 0.014
+    },
+    {
+      "c_norm_tol": 0.05,
+      "yhat_tol": 2.0,
+      "min_debt_gap": 0.2,
+      "candidate_edges": 133,
+      "matched_pairs": 27,
+      "tuples_used": 54,
+      "coverage": 0.054
+    },
+    {
+      "c_norm_tol": 0.05,
+      "yhat_tol": 2.0,
+      "min_debt_gap": 0.3,
+      "candidate_edges": 108,
+      "matched_pairs": 21,
+      "tuples_used": 42,
+      "coverage": 0.042
+    },
+    {
+      "c_norm_tol": 0.05,
+      "yhat_tol": 2.0,
+      "min_debt_gap": 0.5,
+      "candidate_edges": 81,
+      "matched_pairs": 11,
+      "tuples_used": 22,
+      "coverage": 0.022
+    },
+    {
+      "c_norm_tol": 0.1,
+      "yhat_tol": 0.5,
+      "min_debt_gap": 0.2,
+      "candidate_edges": 85,
+      "matched_pairs": 23,
+      "tuples_used": 46,
+      "coverage": 0.046
+    },
+    {
+      "c_norm_tol": 0.1,
+      "yhat_tol": 0.5,
+      "min_debt_gap": 0.3,
+      "candidate_edges": 73,
+      "matched_pairs": 19,
+      "tuples_used": 38,
+      "coverage": 0.038
+    },
+    {
+      "c_norm_tol": 0.1,
+      "yhat_tol": 0.5,
+      "min_debt_gap": 0.5,
+      "candidate_edges": 61,
+      "matched_pairs": 13,
+      "tuples_used": 26,
+      "coverage": 0.026
+    },
+    {
+      "c_norm_tol": 0.1,
+      "yhat_tol": 1.0,
+      "min_debt_gap": 0.2,
+      "candidate_edges": 156,
+      "matched_pairs": 33,
+      "tuples_used": 66,
+      "coverage": 0.066
+    },
+    {
+      "c_norm_tol": 0.1,
+      "yhat_tol": 1.0,
+      "min_debt_gap": 0.3,
+      "candidate_edges": 123,
+      "matched_pairs": 24,
+      "tuples_used": 48,
+      "coverage": 0.048
+    },
+    {
+      "c_norm_tol": 0.1,
+      "yhat_tol": 1.0,
+      "min_debt_gap": 0.5,
+      "candidate_edges": 101,
+      "matched_pairs": 15,
+      "tuples_used": 30,
+      "coverage": 0.03
+    },
+    {
+      "c_norm_tol": 0.1,
+      "yhat_tol": 2.0,
+      "min_debt_gap": 0.2,
+      "candidate_edges": 311,
+      "matched_pairs": 44,
+      "tuples_used": 88,
+      "coverage": 0.088
+    },
+    {
+      "c_norm_tol": 0.1,
+      "yhat_tol": 2.0,
+      "min_debt_gap": 0.3,
+      "candidate_edges": 226,
+      "matched_pairs": 34,
+      "tuples_used": 68,
+      "coverage": 0.068
+    },
+    {
+      "c_norm_tol": 0.1,
+      "yhat_tol": 2.0,
+      "min_debt_gap": 0.5,
+      "candidate_edges": 179,
+      "matched_pairs": 22,
+      "tuples_used": 44,
+      "coverage": 0.044
+    },
+    {
+      "c_norm_tol": 0.2,
+      "yhat_tol": 0.5,
+      "min_debt_gap": 0.2,
+      "candidate_edges": 315,
+      "matched_pairs": 52,
+      "tuples_used": 104,
+      "coverage": 0.104
+    },
+    {
+      "c_norm_tol": 0.2,
+      "yhat_tol": 0.5,
+      "min_debt_gap": 0.3,
+      "candidate_edges": 292,
+      "matched_pairs": 44,
+      "tuples_used": 88,
+      "coverage": 0.088
+    },
+    {
+      "c_norm_tol": 0.2,
+      "yhat_tol": 0.5,
+      "min_debt_gap": 0.5,
+      "candidate_edges": 244,
+      "matched_pairs": 34,
+      "tuples_used": 68,
+      "coverage": 0.068
+    },
+    {
+      "c_norm_tol": 0.2,
+      "yhat_tol": 1.0,
+      "min_debt_gap": 0.2,
+      "candidate_edges": 524,
+      "matched_pairs": 74,
+      "tuples_used": 148,
+      "coverage": 0.148
+    },
+    {
+      "c_norm_tol": 0.2,
+      "yhat_tol": 1.0,
+      "min_debt_gap": 0.3,
+      "candidate_edges": 468,
+      "matched_pairs": 61,
+      "tuples_used": 122,
+      "coverage": 0.122
+    },
+    {
+      "c_norm_tol": 0.2,
+      "yhat_tol": 1.0,
+      "min_debt_gap": 0.5,
+      "candidate_edges": 392,
+      "matched_pairs": 48,
+      "tuples_used": 96,
+      "coverage": 0.096
+    },
+    {
+      "c_norm_tol": 0.2,
+      "yhat_tol": 2.0,
+      "min_debt_gap": 0.2,
+      "candidate_edges": 856,
+      "matched_pairs": 81,
+      "tuples_used": 162,
+      "coverage": 0.162
+    },
+    {
+      "c_norm_tol": 0.2,
+      "yhat_tol": 2.0,
+      "min_debt_gap": 0.3,
+      "candidate_edges": 722,
+      "matched_pairs": 68,
+      "tuples_used": 136,
+      "coverage": 0.136
+    },
+    {
+      "c_norm_tol": 0.2,
+      "yhat_tol": 2.0,
+      "min_debt_gap": 0.5,
+      "candidate_edges": 594,
+      "matched_pairs": 52,
+      "tuples_used": 104,
+      "coverage": 0.104
+    }
+  ]
+}

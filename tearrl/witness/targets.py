@@ -182,7 +182,17 @@ def _outcome_under(world: TearWorld, action: Verb, m_e: int, actor: int) -> np.n
     variable `share`, detection and `report` all move.
     """
     twin = world.clone().intervene(m_e=m_e)
+    if twin.state.actor_index != actor:
+        raise AssertionError(
+            f"witness actor mismatch before step: state has {twin.state.actor_index}, "
+            f"requested agents[{actor}]"
+        )
     twin.step(action)
+    if twin.state.actor_index != 1 - actor:
+        raise AssertionError(
+            f"turn did not advance from actor {actor}: stepped state has "
+            f"actor_index={twin.state.actor_index}"
+        )
     me = twin.state.agents[actor]
     other = twin.state.agents[1 - actor]
     return np.array(

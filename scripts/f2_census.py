@@ -154,6 +154,8 @@ def main() -> int:
     args.out.write_text(
         json.dumps(
             {
+                "status": "non_registered_schema_diagnostic",
+                "registered_60000_pool_regenerated": False,
                 "candidates": args.candidates,
                 "tuples": len(tuple_set),
                 "membership": tuple_set.counts(),

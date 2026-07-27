@@ -25,6 +25,7 @@ from tearrl.eval.probes import (
     ig_cue,
     joint_evasion_propensity,
     oip,
+    p_care,
     scripted_adapter,
     trusted_adapter,
     ucp,
@@ -42,6 +43,7 @@ from tearrl.policies import ALL_POLICIES
 from tearrl.spec import N_ACTIONS
 from tearrl.witness.dataset import HELD_OUT_SEED_BLOCK, INPUT_DIM
 from tearrl.witness.model import WitnessEnsemble
+from tearrl.witness.targets import witness_target
 
 @pytest.fixture(scope="module")
 def tuples() -> STTupleSet:
@@ -467,6 +469,83 @@ def test_app_d_thresholds_are_non_degenerate(
     assert thresholds.tau_o > 0
     assert thresholds.delta_u > 0
     assert 0 < thresholds.tau_safe < 1
+
+
+# ======================================================================
+# descriptive-only P_care (successor baseline; never a gate)
+# ======================================================================
+
+
+def _oracle_consequence_matrix(world: TearWorld, actor: int) -> np.ndarray:
+    matrix = np.zeros((N_ACTIONS, 9), dtype=np.float64)
+    mask = world.legal_actions(actor)
+    for index, feasible in enumerate(mask):
+        if feasible:
+            matrix[index] = witness_target(world, Verb(index), actor)
+    return matrix
+
+
+def test_p_care_random_anchor_is_exactly_flat(
+    tuples: STTupleSet, adapters: dict
+) -> None:
+    """Uniform legal mass has no pairwise preference for SHARE/REPAIR over WAIT."""
+    result = p_care(adapters["random"], tuples, _oracle_consequence_matrix)
+
+    assert result.eligible_pairs > 0
+    assert result.selection_frequency == pytest.approx(0.5)
+    assert result.mean_preference_margin == pytest.approx(0.0, abs=1e-12)
+    assert result.magnitude_slope == pytest.approx(0.0, abs=1e-12)
+    assert result.magnitude_correlation == pytest.approx(0.0, abs=1e-12)
+
+
+def test_p_care_detects_magnitude_graded_pairwise_preference(
+    tuples: STTupleSet,
+) -> None:
+    def variable_consequences(world: TearWorld, actor: int) -> np.ndarray:
+        prediction = _oracle_consequence_matrix(world, actor)
+        wait = prediction[int(Verb.WAIT), 2]
+        scale = 0.5 + 0.1 * world.state.agents[actor].energy
+        positive = max(0.0, prediction[int(Verb.SHARE), 2] - wait)
+        prediction[int(Verb.SHARE), 2] = wait + scale * positive
+        # Keep REPAIR out of this synthetic support so changing action count
+        # cannot confound the monotonicity check.
+        prediction[int(Verb.REPAIR), 2] = wait
+        return prediction
+
+    def graded(world: TearWorld, actor: int, c: ResponsibilityState) -> np.ndarray:
+        prediction = variable_consequences(world, actor)
+        output = np.zeros(N_ACTIONS, dtype=np.float64)
+        wait = prediction[int(Verb.WAIT), 2]
+        magnitude = max(0.0, prediction[int(Verb.SHARE), 2] - wait)
+        output[int(Verb.WAIT)] = 1.0
+        output[int(Verb.SHARE)] = 1.0 + 10.0 * magnitude
+        return output
+
+    result = p_care(
+        trusted_adapter(
+            graded,
+            why="synthetic magnitude-graded diagnostic; oracle predictions never reach a learner",
+        ),
+        tuples,
+        variable_consequences,
+    )
+
+    assert result.eligible_pairs > 0
+    assert result.selection_frequency > 0.5
+    assert result.mean_preference_margin > 0.0
+    assert result.magnitude_slope > 0.0
+    assert result.magnitude_correlation > 0.0
+
+
+def test_p_care_rejects_malformed_consequence_matrix(
+    tuples: STTupleSet, adapters: dict
+) -> None:
+    with pytest.raises(ValueError, match="consequence predictor"):
+        p_care(
+            adapters["random"],
+            tuples,
+            lambda world, actor: np.zeros((N_ACTIONS, 8)),
+        )
 
 
 # ======================================================================

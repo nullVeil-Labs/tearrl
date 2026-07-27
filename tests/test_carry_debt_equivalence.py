@@ -1,7 +1,7 @@
 """
-Known-answer tests frozen by Amendment 002 §5 (PROPOSED, not yet adopted).
+Known-answer tests frozen by Amendment 002 §5 (ADOPTED at 2cefb6d).
 
-These verify the amendment's load-bearing claim BEFORE it is adopted: that
+These verify the amendment's load-bearing claim: that
 carry-debt read timing disambiguates §2.8's unindexed `D̂` **without modifying
 §2.6's registered debt recurrence**, because the two forms coincide on every
 reachable input.
@@ -158,6 +158,19 @@ def _exhaustive_welfare_signs() -> dict[Verb, set[int]]:
 _observed_welfare_signs = _exhaustive_welfare_signs
 
 
+def _assert_single_welfare_signs(signs: dict[Verb, set[int]]) -> None:
+    """The non-tautological welfare-sign guard shared by real and mutation tests."""
+    uncovered = [verb.name for verb, seen in signs.items() if not seen]
+    assert not uncovered, f"verbs never exercised, claim unverified: {uncovered}"
+
+    for verb, seen in signs.items():
+        mixed = {sign for sign in seen if sign != 0}
+        assert len(mixed) <= 1, (
+            f"{verb.name} produced BOTH signs of ΔŴ_other {seen}; §2.1's "
+            "unreachability proof does not hold for it"
+        )
+
+
 def test_every_registered_action_has_a_single_welfare_sign() -> None:
     """§2.1's unreachability claim, checked EXHAUSTIVELY over the registered
     action set rather than sampled over states.
@@ -168,16 +181,20 @@ def test_every_registered_action_has_a_single_welfare_sign() -> None:
     is identically zero. Every one of the ten verbs is covered.
     """
     signs = _observed_welfare_signs()
+    _assert_single_welfare_signs(signs)
 
-    uncovered = [verb.name for verb, seen in signs.items() if not seen]
-    assert not uncovered, f"verbs never exercised, claim unverified: {uncovered}"
 
-    for verb, seen in signs.items():
-        mixed = {s for s in seen if s != 0}
-        assert len(mixed) <= 1, (
-            f"{verb.name} produced BOTH signs of ΔŴ_other {seen}; §2.1's "
-            "unreachability proof does not hold for it"
-        )
+def test_welfare_sign_guard_fires_on_a_dual_sign_mutation() -> None:
+    """Mutation guard: a future dual-sign verb must reopen the equivalence proof.
+
+    This deliberately mutates the *enumerated answer*, not the arithmetic
+    `max(0, -delta) * max(0, +delta)`, whose zero product is tautological.
+    """
+    signs = {verb: set(seen) for verb, seen in _observed_welfare_signs().items()}
+    signs[Verb.WAIT] = {-1, 1}
+
+    with pytest.raises(AssertionError, match="WAIT produced BOTH signs"):
+        _assert_single_welfare_signs(signs)
 
 
 def test_harming_and_restoring_verbs_are_disjoint_sets() -> None:
