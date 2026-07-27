@@ -45,7 +45,7 @@ if git diff --cached --quiet; then
     exit 1
 fi
 git diff --cached --name-status
-git diff --cached --check
+git -c core.whitespace=cr-at-eol diff --cached --check
 
 echo
 echo "=== PUBLIC COMMIT IDENTITY ==="

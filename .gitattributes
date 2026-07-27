@@ -6,3 +6,8 @@
 *.jpg binary
 *.pt  binary
 *.npz binary
+# Frozen preregistrations are addressed by byte-level SHA-256 digests.
+# Preserve their original bytes across platforms; ordinary source remains LF.
+docs/cc_prereg.md -text
+docs/cc_implementation.md -text
+docs/cc_v*_prereg.md -text
