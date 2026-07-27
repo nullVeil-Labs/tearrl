@@ -39,12 +39,6 @@ if [ ! -f "$TERMS_FILE" ]; then
     exit 1
 fi
 
-PATTERN="$(grep -v -e '^\s*#' -e '^\s*$' "$TERMS_FILE" | paste -sd'|' -)"
-if [ -z "$PATTERN" ]; then
-    echo ">>> term list is empty. NOTHING COMMITTED."
-    exit 1
-fi
-
 echo "=== STAGED FILES ==="
 if git diff --cached --quiet; then
     echo "nothing staged -- aborting"
@@ -62,7 +56,7 @@ git remote -v
 
 echo
 echo "=== LOCAL-ONLY FILES MUST BE IGNORED ==="
-for f in TEARRL-0-*.md CLAUDE.md "$TERMS_FILE"; do
+for f in TEARRL-0-*.md CLAUDE.md GOAL-*.md .claude .codex .agents "$TERMS_FILE"; do
     [ -e "$f" ] || continue
     if git check-ignore -q "$f"; then
         echo "  ignored : $f"
@@ -74,45 +68,8 @@ for f in TEARRL-0-*.md CLAUDE.md "$TERMS_FILE"; do
 done
 
 echo
-echo "=== SCANNER SELF-TEST ==="
-# A scanner that always reports "clean" is worse than none. Prove the pattern
-# matches known-positives, drawn from the term list itself, before trusting a
-# negative result. Also proves case-insensitivity is live -- defect 2 above.
-probe_lower="$(head -1 <(grep -v -e '^\s*#' -e '^\s*$' "$TERMS_FILE"))"
-probe_upper="$(printf '%s' "$probe_lower" | tr '[:lower:]' '[:upper:]')"
-matched=0
-printf '%s\n' "$probe_lower" | grep -q -i -E "$PATTERN" && matched=$((matched + 1))
-printf '%s\n' "$probe_upper" | grep -q -i -E "$PATTERN" && matched=$((matched + 1))
-if [ "$matched" -lt 2 ]; then
-    echo ">>> SELF-TEST FAILED (matched $matched/2, case-insensitivity broken)."
-    echo ">>> NOTHING COMMITTED."
-    exit 1
-fi
-echo "self-test: matched 2/2 known-positives, case-insensitive"
-
-echo
-echo "=== LEAK SCAN (staged snapshot, case-insensitive) ==="
-set +e
-hits="$(git grep --cached -I -n -i -E "$PATTERN" -- . 2>&1)"
-scan_rc=$?
-set -e
-
-case "$scan_rc" in
-    0)
-        printf '%s\n' "$hits"
-        echo ">>> LEAK SCAN FAILED. NOTHING COMMITTED."
-        exit 1
-        ;;
-    1)
-        echo "leak scan: CLEAN"
-        ;;
-    *)
-        printf '%s\n' "$hits"
-        echo ">>> LEAK SCAN ERROR (rc=$scan_rc). NOTHING COMMITTED."
-        exit "$scan_rc"
-        ;;
-esac
-
+echo "=== LEAK SCAN (raw staged blobs, including bytecode) ==="
+./.venv/Scripts/python.exe scripts/scan_staged_snapshot.py --terms "$TERMS_FILE"
 echo
 echo "=== FULL TEST SUITE ==="
 ./.venv/Scripts/python.exe -m pytest tests -q -p no:cacheprovider --no-header

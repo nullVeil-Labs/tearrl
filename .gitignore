@@ -3,17 +3,34 @@
 # ---------------------------------------------------------------------
 TEARRL-0-*.md
 CLAUDE.md
+GOAL-*.md
+.claude/
+.codex/
+.agents/
 private/
 local/
 notes/
 *.private.*
 *.local.*
 
+# Machine- and editor-specific state
+.vscode/
+.idea/
+*.code-workspace
+*.log
+
 # Credentials
 .env
 .env.*
 *.key
 *.pem
+*.p12
+*.pfx
+.netrc
+.npmrc
+.pypirc
+id_rsa*
+id_ed25519*
 
 # ---------------------------------------------------------------------
 # Python
