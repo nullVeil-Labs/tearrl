@@ -19,6 +19,14 @@ notes/
 *.code-workspace
 *.log
 
+# Opaque archives can conceal ignored or private files. Publish release archives
+# from a verified commit instead of storing them inside the repository.
+*.zip
+*.7z
+*.tar
+*.tar.gz
+*.tgz
+
 # Credentials
 .env
 .env.*

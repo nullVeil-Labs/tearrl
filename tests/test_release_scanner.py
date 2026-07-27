@@ -80,11 +80,15 @@ def test_invalid_regex_term_is_scanned_as_a_literal(tmp_path: Path) -> None:
     assert result.returncode == 1
     assert "forbidden bytes: binary.bin:1" in result.stderr
 
+
 def test_force_added_local_session_file_is_rejected(tmp_path: Path) -> None:
     repo = _repo(tmp_path)
     target = repo / "GOAL-private-session.md"
     target.write_text("local agent notes\n", encoding="utf-8")
-    _git(repo, "add", "-f", target.name)
+    archive = repo / "results.zip"
+    archive.write_bytes(b"opaque archive placeholder")
+    _git(repo, "add", "-f", target.name, archive.name)
     result = _scan(repo)
     assert result.returncode == 1
     assert "local-only artifact: GOAL-private-session.md" in result.stderr
+    assert "local-only artifact: results.zip" in result.stderr

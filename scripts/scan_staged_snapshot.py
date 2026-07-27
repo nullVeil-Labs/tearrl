@@ -40,7 +40,7 @@ LOCAL_ONLY_FILE_NAMES = frozenset(
     {".leakpatterns", ".netrc", ".npmrc", ".pypirc", "claude.md"}
 )
 LOCAL_ONLY_SUFFIXES = frozenset(
-    {".ckpt", ".key", ".log", ".npz", ".p12", ".pem", ".pfx", ".pt"}
+    {".7z", ".ckpt", ".gz", ".key", ".log", ".npz", ".p12", ".pem", ".pfx", ".pt", ".tar", ".tgz", ".zip"}
 )
 
 
