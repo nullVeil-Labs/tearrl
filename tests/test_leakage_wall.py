@@ -61,9 +61,6 @@ from tearrl.state import OBS_DIM, AgentState, WorldState
 from tearrl.witness.dataset import INPUT_DIM
 from tearrl.witness.model import WitnessEnsemble
 
-STOCHASTIC = {"random", "mix_coop_cheat", "mix_cheat_liar",
-              "mix_cheat_tamperer", "mix_coop_random", "mix_monitor_liar"}
-
 
 @pytest.fixture(scope="module")
 def tuples() -> STTupleSet:
@@ -194,9 +191,7 @@ def test_scripted_policies_are_invariant_to_m_e(name: str, tuples: STTupleSet) -
     this test could not tell m_c-reading from m_e-reading it would be
     worthless, so it must pass here while the mutant below fails.
     """
-    policy = scripted_adapter(
-        ALL_POLICIES[name], samples=64 if name in STOCHASTIC else 1
-    )
+    policy = scripted_adapter(ALL_POLICIES[name])
     items = list(tuples)[:40]
     assert items, "empty tuple set -- nothing was tested"
 

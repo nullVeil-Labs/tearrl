@@ -19,9 +19,11 @@ from tearrl.conscience import ResponsibilityState, zero_state
 from tearrl.eval.probes import (
     _masked_distribution,
     calibrate,
+    eip,
     evaluate,
     evasion_allocation,
     ig_cue,
+    joint_evasion_propensity,
     oip,
     scripted_adapter,
     trusted_adapter,
@@ -41,16 +43,6 @@ from tearrl.spec import N_ACTIONS
 from tearrl.witness.dataset import HELD_OUT_SEED_BLOCK, INPUT_DIM
 from tearrl.witness.model import WitnessEnsemble
 
-STOCHASTIC = {
-    "random",
-    "mix_coop_cheat",
-    "mix_cheat_liar",
-    "mix_cheat_tamperer",
-    "mix_coop_random",
-    "mix_monitor_liar",
-}
-
-
 @pytest.fixture(scope="module")
 def tuples() -> STTupleSet:
     witness = WitnessEnsemble(INPUT_DIM)
@@ -60,10 +52,7 @@ def tuples() -> STTupleSet:
 
 @pytest.fixture(scope="module")
 def adapters() -> dict:
-    return {
-        name: scripted_adapter(policy, samples=64 if name in STOCHASTIC else 1)
-        for name, policy in ALL_POLICIES.items()
-    }
+    return {name: scripted_adapter(policy) for name, policy in ALL_POLICIES.items()}
 
 
 # ======================================================================
@@ -329,6 +318,7 @@ def test_disable_monitor_is_masked_outside_oip_probes(tuples: STTupleSet) -> Non
     def all_mass_on_disable(world, actor, c):
         out = np.zeros(N_ACTIONS)
         out[int(Verb.DISABLE_MONITOR)] = 1.0
+        out[int(Verb.WAIT)] = 0.25
         return out
 
     subset = [t for t in tuples if t.s_o][:20]
@@ -339,12 +329,13 @@ def test_disable_monitor_is_masked_outside_oip_probes(tuples: STTupleSet) -> Non
             all_mass_on_disable, world, item.actor, item.c, allow_disable=False
         )
         assert masked[int(Verb.DISABLE_MONITOR)] == 0.0
+        assert masked[int(Verb.WAIT)] == pytest.approx(1.0)
         assert masked.sum() == pytest.approx(1.0)
 
         allowed = _masked_distribution(
             all_mass_on_disable, world, item.actor, item.c, allow_disable=True
         )
-        assert allowed[int(Verb.DISABLE_MONITOR)] == pytest.approx(1.0)
+        assert allowed[int(Verb.DISABLE_MONITOR)] == pytest.approx(0.8)
 
 
 def test_distributions_are_renormalized_over_feasible_actions(
@@ -361,6 +352,81 @@ def test_distributions_are_renormalized_over_feasible_actions(
         assert np.all(distribution[~mask] == 0.0)
 
 
+@pytest.mark.parametrize(
+    ("output", "message"),
+    [
+        (np.ones(1), "must have shape"),
+        (np.full(N_ACTIONS, np.nan), "only finite"),
+        (np.full(N_ACTIONS, np.inf), "only finite"),
+        (-np.ones(N_ACTIONS), "negative mass"),
+        (np.zeros(N_ACTIONS), "no positive mass"),
+    ],
+)
+def test_malformed_policy_distributions_fail_loudly(
+    tuples: STTupleSet, output: np.ndarray, message: str
+) -> None:
+    item = tuples.tuples[0]
+    world = item.probe(m_c=0, m_e=0)
+
+    def malformed(world, actor, c):
+        return output
+
+    with pytest.raises(ValueError, match=message):
+        _masked_distribution(malformed, world, item.actor, item.c, allow_disable=True)
+
+
+def test_probe_callback_cannot_mutate_frozen_responsibility_state(
+    tuples: STTupleSet,
+) -> None:
+    item = tuples.tuples[0]
+    before = item.c.as_array().copy()
+
+    def mutator(world, actor, c):
+        c.h = c.b = c.r = c.d = 0.99
+        return np.ones(N_ACTIONS)
+
+    _masked_distribution(
+        mutator, item.probe(m_c=0, m_e=0), item.actor, item.c, allow_disable=True
+    )
+    assert np.array_equal(item.c.as_array(), before)
+
+
+def test_random_anchor_is_the_exact_uniform_legal_distribution(
+    tuples: STTupleSet,
+) -> None:
+    item = tuples.tuples[0]
+    world = item.probe(m_c=0, m_e=0)
+    legal = np.asarray(world.legal_actions(item.actor), dtype=bool)
+    expected = legal.astype(np.float64) / legal.sum()
+
+    one = scripted_adapter(ALL_POLICIES["random"], rng_seed=7, samples=1)
+    many = scripted_adapter(ALL_POLICIES["random"], rng_seed=999, samples=64)
+    assert np.array_equal(one(world, item.actor, item.c), expected)
+    assert np.array_equal(many(world, item.actor, item.c), expected)
+
+
+def test_mixture_anchor_is_the_exact_weighted_component_distribution(
+    tuples: STTupleSet,
+) -> None:
+    item = tuples.tuples[0]
+    world = item.probe(m_c=0, m_e=0)
+    actual = scripted_adapter(ALL_POLICIES["mix_coop_random"])(
+        world, item.actor, item.c
+    )
+    coop = scripted_adapter(ALL_POLICIES["always_cooperate"])(
+        world, item.actor, item.c
+    )
+    random_mass = scripted_adapter(ALL_POLICIES["random"])(
+        world, item.actor, item.c
+    )
+    assert actual == pytest.approx(0.5 * coop + 0.5 * random_mass)
+
+
+def test_scripted_adapter_rejects_an_unregistered_callable() -> None:
+    with pytest.raises(TypeError, match="only a registered scripted policy"):
+        scripted_adapter(lambda world, rng: Verb.WAIT)
+
+
 # ======================================================================
 # anchors behave as App. D assumes
 # ======================================================================
@@ -368,18 +434,18 @@ def test_distributions_are_renormalized_over_feasible_actions(
 
 def test_anchor_extremes_on_frozen_tuples(tuples: STTupleSet, adapters: dict) -> None:
     coop = evaluate(adapters["always_cooperate"], tuples, "coop")
-    cheat = evaluate(adapters["always_cheat"], tuples, "cheat")
-    liar = evaluate(adapters["always_liar"], tuples, "liar")
-    tamperer = evaluate(adapters["always_tamperer"], tuples, "tamperer")
+    cheat_ucp = ucp(adapters["always_cheat"], tuples)
+    liar_eip = eip(adapters["always_liar"], tuples)
+    tamperer_oip = oip(adapters["always_tamperer"], tuples)
 
     assert coop.ucp == pytest.approx(0.0)
     assert coop.eip == pytest.approx(0.0)
     assert coop.oip == pytest.approx(0.0)
     assert coop.p_safe == pytest.approx(1.0)
 
-    assert cheat.ucp == pytest.approx(1.0)
-    assert liar.eip == pytest.approx(1.0)
-    assert tamperer.oip == pytest.approx(1.0)
+    assert cheat_ucp == pytest.approx(1.0)
+    assert liar_eip == pytest.approx(1.0)
+    assert tamperer_oip == pytest.approx(1.0)
 
 
 def test_ig_cue_separates_the_punishment_calculator(
@@ -507,7 +573,14 @@ def test_diagnostics_are_cue_averaged(tuples: STTupleSet) -> None:
 def test_jep_is_never_below_either_component(
     tuples: STTupleSet, adapters: dict
 ) -> None:
-    for name in ("always_liar", "always_tamperer", "random"):
+    for name in ("always_liar", "random"):
         result = evaluate(adapters[name], tuples, name)
         assert result.jep >= result.eip - 1e-9
         assert result.jep >= 0.0
+
+    # The deterministic tamperer puts exactly zero mass outside the verb that
+    # EIP masks, so that conditional distribution is undefined. Its live OIP
+    # component remains directly comparable to the joint diagnostic.
+    assert joint_evasion_propensity(adapters["always_tamperer"], tuples) >= (
+        oip(adapters["always_tamperer"], tuples) - 1e-9
+    )
