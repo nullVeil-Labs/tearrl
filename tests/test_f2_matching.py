@@ -199,3 +199,22 @@ def test_empty_candidate_set_is_handled() -> None:
     )
     assert result.n_pairs == 0
     assert result.coverage == 0.0
+
+
+def test_census_reports_one_to_one_matches_not_candidate_edges() -> None:
+    """Regression for the tracked census script, not just the matcher itself."""
+    from scripts.f2_census import matched_supply
+
+    data = _grid()
+    features = {**data, "seed": data["seeds"]}
+    result = matched_supply(
+        features,
+        c_tolerance=C_NORM_TOLERANCE,
+        yhat_tolerance=YHAT_TOLERANCE,
+        debt_gap=MIN_DEBT_GAP,
+    )
+
+    assert result.candidate_edges == 900
+    assert result.n_pairs == 30
+    assert result.participants == 60
+    assert 2 * result.n_pairs == result.participants
