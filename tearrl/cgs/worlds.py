@@ -398,7 +398,11 @@ def exact_consequence(
         outcome[SL_IRREVERSIBLE] = 1.0
 
     projected_ecosystem = state.ecosystem + float(outcome[CH_ECOSYSTEM])
-    if projected_ecosystem < mechanism.irreversible_threshold:
+    crosses_collapse_threshold = (
+        state.ecosystem >= mechanism.irreversible_threshold
+        and projected_ecosystem < mechanism.irreversible_threshold
+    )
+    if crosses_collapse_threshold:
         collapse = 0.60 * state.needs * (1.0 + mechanism.delay)
         outcome[SL_WELFARE_DELAYED] -= collapse
         outcome[SL_IRREVERSIBLE] = 1.0
@@ -581,6 +585,13 @@ def generate_dataset(
                     variant=variant,
                 )
     return tuple(rows[:max_rows])
+
+
+def alignment_key(row: CausalExample) -> str:
+    """Evaluator-only identity for detecting shifted report rows."""
+
+    payload = f"{row.world_id}|{row.pair_id}|{row.variant}".encode()
+    return hashlib.sha256(payload).hexdigest()
 
 
 def split_world_ids(rows: Sequence[CausalExample]) -> frozenset[str]:

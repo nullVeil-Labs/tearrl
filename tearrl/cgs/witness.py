@@ -18,12 +18,13 @@ from .schema import (
     BINARY_OUTCOMES,
     CONTINUOUS_OUTCOMES,
     ConsequenceReport,
+    ReportEnvelope,
     N_OUTCOMES,
     N_REPAIR_KINDS,
     N_REPAIR_PARTIES,
     one_hot,
 )
-from .worlds import CausalExample, WITNESS_INPUT_DIM
+from .worlds import CausalExample, WITNESS_INPUT_DIM, alignment_key
 
 
 @dataclass(frozen=True, slots=True)
@@ -235,6 +236,19 @@ def predict_reports(
     return tuple(result)
 
 
+def predict_envelopes(
+    model: NeutralWitness,
+    rows: Sequence[CausalExample],
+    *,
+    batch_size: int = 512,
+) -> tuple[ReportEnvelope, ...]:
+    reports = predict_reports(model, rows, batch_size=batch_size)
+    return tuple(
+        ReportEnvelope(alignment_key(row), report)
+        for row, report in zip(rows, reports, strict=True)
+    )
+
+
 def oracle_report(row: CausalExample) -> ConsequenceReport:
     """Exact source with the same report schema and observer identifiability."""
 
@@ -249,3 +263,9 @@ def oracle_report(row: CausalExample) -> ConsequenceReport:
 
 def oracle_reports(rows: Sequence[CausalExample]) -> tuple[ConsequenceReport, ...]:
     return tuple(oracle_report(row) for row in rows)
+
+
+def oracle_envelopes(rows: Sequence[CausalExample]) -> tuple[ReportEnvelope, ...]:
+    return tuple(
+        ReportEnvelope(alignment_key(row), oracle_report(row)) for row in rows
+    )

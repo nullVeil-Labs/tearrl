@@ -65,7 +65,7 @@ class RepairKind(IntEnum):
 # information-gain, declared target[3]. These are mechanics, not action IDs.
 ACTION_DESCRIPTORS = np.asarray(
     [
-        [1.0, 0.10, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0, 0, 0],
+        [2.4, 0.10, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0, 0, 0],
         [2.0, 0.40, 0.0, 1.0, 0.0, 0.0, 0.0, 0.2, 0.0, 0, 0, 0],
         [1.0, 0.10, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1, 0, 0],
         [1.0, 0.10, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0, 1, 0],
@@ -115,6 +115,18 @@ class ConsequenceReport:
         if value.shape != (REPORT_DIM,):
             raise AssertionError("report schema drift")
         return value
+
+
+@dataclass(frozen=True, slots=True)
+class ReportEnvelope:
+    """Evaluator-only row alignment around the fixed actor-facing report.
+
+    The key is checked and discarded before feature construction. It carries no
+    source identity and never enters an actor or witness tensor.
+    """
+
+    alignment_key: str
+    report: ConsequenceReport
 
 
 def one_hot(index: int, size: int) -> np.ndarray:
