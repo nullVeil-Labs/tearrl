@@ -20,7 +20,19 @@ declared identity input (the selector's q-slot / C3-IM's appended q-input).
 
 m_e,t is never observable. The §2.1 leakage diagnostic -- identical o_t with
 varied m_e must yield identical policy logits -- is an expected null that
-holds by construction here, and is tested rather than assumed.
+holds by construction here.
+
+That null is asserted, structurally and behaviourally, in
+`tests/test_leakage_wall.py`, and the guards there are mutation-tested: a
+policy that branches on m_e must fail them, and a policy that branches on
+m_c (the VISIBLE cue, which G3 exists to measure) must not.
+
+`observe` being clean is necessary but not sufficient for the wall to hold.
+Both policy protocols hand the callee a whole `TearWorld`, so a learned
+policy could read `state.m_e` without violating any type signature. The
+sanctioned input for learned conditions is therefore
+`agents.inputs.PolicyInput`, which carries no path back to a world at all;
+see that module for why the scripted policies keep the world API.
 """
 
 from __future__ import annotations

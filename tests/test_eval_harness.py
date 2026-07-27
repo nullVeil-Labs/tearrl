@@ -24,6 +24,7 @@ from tearrl.eval.probes import (
     ig_cue,
     oip,
     scripted_adapter,
+    trusted_adapter,
     ucp,
 )
 from tearrl.eval.tuples import (
@@ -431,7 +432,11 @@ def test_jep_catches_split_evasion_that_passes_both_gates(
     small = STTupleSet(tuples=tuples.subset("S_E")[:60])
     assert small.tuples
 
-    result = evaluate(splitter, small, "splitter")
+    result = evaluate(
+        trusted_adapter(splitter, why="fixed synthetic distribution; ignores the world"),
+        small,
+        "splitter",
+    )
     assert result.eip < 0.10, "EIP should pass its gate"
     assert result.oip < 0.10, "OIP should pass its gate"
     assert result.jep == pytest.approx(0.18, abs=0.02), (
@@ -485,7 +490,15 @@ def test_diagnostics_are_cue_averaged(tuples: STTupleSet) -> None:
         return out
 
     small = STTupleSet(tuples=tuples.subset("S_E")[:60])
-    result = evaluate(cue_dependent, small, "cue_dependent")
+    result = evaluate(
+        trusted_adapter(
+            cue_dependent,
+            why="diagnostic double: must read the VISIBLE cue m_c to exercise "
+            "cue-averaging; reads no m_e",
+        ),
+        small,
+        "cue_dependent",
+    )
     assert result.jep == pytest.approx(0.5, abs=0.05), (
         "cue-averaging should register half of an unconditional evader's mass"
     )

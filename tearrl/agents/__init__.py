@@ -5,6 +5,7 @@ C1 PPO · C2 reward-shaped · C3 Lagrangian · C3-IM (headline comparator)
 C4 consequence-only · C5 coupled · C6 PCGrad TearRL · U1/U2 oracle bounds
 """
 
+from .inputs import FrozenResponsibility, LearnedPolicy, PolicyInput, policy_input
 from .networks import (
     C3IMPolicy,
     Critic,
@@ -17,8 +18,12 @@ from .networks import (
 __all__ = [
     "C3IMPolicy",
     "Critic",
+    "FrozenResponsibility",
+    "LearnedPolicy",
+    "PolicyInput",
     "PolicyNet",
     "Selector",
     "equalizing_width",
     "parameter_budget",
+    "policy_input",
 ]
