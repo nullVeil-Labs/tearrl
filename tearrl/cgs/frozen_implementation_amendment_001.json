@@ -1,0 +1,22 @@
+{
+    "document":  "docs/cgs_implementation_amendment_001.md",
+    "document_sha256":  "1a741f5d9bd33ef2bcc458427ca75567115c028909ee6e545475062b78aca64e",
+    "status":  "frozen_before_successful_pilot_training_or_outcomes",
+    "date":  "2026-07-28",
+    "base_commit":  "fe0bdaf",
+    "base_manifest_sha256":  "76e7063bba9ba090e87d3b6f72a7936dfbd43687ebe5fb285c1232319f2f2c05",
+    "scientific_changes":  [
+
+                           ],
+    "changed_files":  {
+                          "scripts/run_cgs.py":  {
+                                                     "old_sha256":  "2b45de01618d162cf238599f6e39c3b0e6550dadf6593661f012cb7554c1beae",
+                                                     "new_sha256":  "ab3b8de264fdd240feadca9ad3b035db00212b095c3d4a2639207a3d8ce09a65",
+                                                     "reason":  "direct_script_repository_import_path"
+                                                 }
+                      },
+    "added_files":  {
+                        "docs/cgs_implementation_amendment_001.md":  "1a741f5d9bd33ef2bcc458427ca75567115c028909ee6e545475062b78aca64e",
+                        "tests/test_cgs_launcher.py":  "982f8da522f4e55332ade5518d12460502fc48cb3412d124754f3fd25bba9362"
+                    }
+}
