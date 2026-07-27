@@ -1,0 +1,7 @@
+{
+  "document": "docs/cgs_prereg.md",
+  "sha256": "9d1e707ff871b838e8453016042a1ce73ad43d79432bf5b3a26e15099e775d1f",
+  "status": "frozen_before_implementation_and_outcomes",
+  "date": "2026-07-28",
+  "parent_commit": "6f70630"
+}
