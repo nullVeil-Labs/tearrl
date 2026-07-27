@@ -256,3 +256,57 @@ def test_empty_mask_is_detected_in_any_row_of_a_batch() -> None:
 def test_valid_masks_are_not_rejected() -> None:
     mask = torch.tensor([[True, False], [False, True]])
     assert torch.isfinite(entropy_bonus(torch.zeros(2, 2), mask))
+
+
+@pytest.mark.parametrize("poison", [float("nan"), float("inf"), -float("inf")])
+def test_selector_sanitizes_infeasible_rows_before_backward(poison: float) -> None:
+    torch.manual_seed(411)
+    net = Selector(hidden=8)
+    witness = torch.randn(1, 10, 9)
+    witness[0, 7] = poison
+    witness.requires_grad_()
+    c = torch.randn(1, 4)
+    q_other = torch.randn(1, 4)
+    mask = torch.ones(1, 10, dtype=torch.bool)
+    mask[0, 7] = False
+
+    baseline = witness.detach().clone()
+    baseline[0, 7] = 0.0
+    with torch.no_grad():
+        expected = torch.softmax(net(baseline, c, q_other, mask), dim=-1)
+
+    logits = net(witness, c, q_other, mask)
+    actual = torch.softmax(logits, dim=-1)
+    assert torch.allclose(actual, expected, atol=1e-9)
+    (-torch.log_softmax(logits, dim=-1)[0, 0]).backward()
+
+    assert all(torch.isfinite(parameter.grad).all() for parameter in net.parameters())
+    assert torch.isfinite(witness.grad[mask]).all()
+    assert (witness.grad[~mask] == 0).all()
+
+
+def test_broadcastable_action_masks_are_rejected_in_every_policy_path() -> None:
+    bad = torch.ones(2, 1, dtype=torch.bool)
+    obs = torch.zeros(2, 434)
+    q_other = torch.zeros(2, 4)
+    witness = torch.zeros(2, 10, 9)
+
+    with pytest.raises(ValueError, match="broadcasting a mask"):
+        PolicyNet(hidden=8)(obs, q_other, bad)
+    with pytest.raises(ValueError, match="broadcasting a mask"):
+        Selector(hidden=8)(witness, torch.zeros(2, 4), q_other, bad)
+    with pytest.raises(ValueError, match="broadcasting a mask"):
+        C3IMPolicy(hidden=8)(obs, witness, q_other, bad)
+    with pytest.raises(ValueError, match="broadcasting a mask"):
+        entropy_bonus(torch.zeros(2, 10), bad)
+
+
+def test_action_masks_must_be_boolean() -> None:
+    with pytest.raises(TypeError, match="must be bool"):
+        entropy_bonus(torch.zeros(1, 2), torch.ones(1, 2, dtype=torch.int64))
+
+
+def test_constant_float16_normalization_stays_finite() -> None:
+    out = normalize(torch.tensor([5.0, 5.0], dtype=torch.float16))
+    assert out.tolist() == [0.0, 0.0]
+    assert torch.isfinite(out).all()

@@ -45,7 +45,7 @@ from ..conscience import (
     CH_O,
     CH_U,
 )
-from ..spec import GAMMA, W_AUTONOMY, W_DEBT, W_E, W_HARM, W_O, W_U
+from ..spec import D_MAX, GAMMA, W_AUTONOMY, W_DEBT, W_E, W_HARM, W_O, W_U
 from .networks import assert_feasible_mask
 
 GAE_LAMBDA: float = 0.95      # B.2
@@ -65,6 +65,14 @@ def conscience_reward(prediction: np.ndarray, debt: float) -> float:
     unrelated generosity, which is the same laundering the debt channel
     forbids for `share`.
     """
+    prediction = np.asarray(prediction)
+    if prediction.shape != (9,) or not np.isfinite(prediction).all():
+        raise ValueError(
+            f"witness prediction must be a finite 9-vector, got shape {prediction.shape}"
+        )
+    if not np.isfinite(debt) or not 0.0 <= debt <= D_MAX:
+        raise ValueError(f"debt must be finite and in [0, {D_MAX}], got {debt}")
+
     harm = max(0.0, -float(prediction[CH_DW_OTHER]))
     autonomy = max(0.0, -float(prediction[CH_DAUTONOMY]))
     return -(
@@ -104,8 +112,21 @@ class RolloutBuffer:
             getattr(self, name).clear()
 
     def add(self, **kwargs) -> None:
-        for name, value in kwargs.items():
-            getattr(self, name).append(value)
+        """Append one complete transition atomically."""
+        expected = set(self.__slots__)
+        provided = set(kwargs)
+        if provided != expected:
+            missing = sorted(expected - provided)
+            extra = sorted(provided - expected)
+            raise ValueError(f"incomplete rollout row; missing={missing}, extra={extra}")
+
+        lengths = {len(getattr(self, name)) for name in self.__slots__}
+        if len(lengths) != 1:
+            detail = {name: len(getattr(self, name)) for name in self.__slots__}
+            raise RuntimeError(f"rollout buffer is already misaligned: {detail}")
+
+        for name in self.__slots__:
+            getattr(self, name).append(kwargs[name])
 
 
 def compute_gae(
@@ -123,6 +144,17 @@ def compute_gae(
     boundary would inject value that the environment never pays.
     """
     n = len(rewards)
+    rewards = np.asarray(rewards)
+    values = np.asarray(values)
+    dones = np.asarray(dones)
+    if rewards.ndim != 1 or values.ndim != 1 or dones.ndim != 1:
+        raise ValueError("GAE inputs must be one-dimensional")
+    if not (len(rewards) == len(values) == len(dones)):
+        raise ValueError(
+            "GAE inputs must have equal lengths: "
+            f"rewards={len(rewards)}, values={len(values)}, dones={len(dones)}"
+        )
+
     advantages = np.zeros(n, dtype=np.float64)
     running = 0.0
     next_value = last_value
@@ -141,12 +173,20 @@ def normalize(advantages: torch.Tensor) -> torch.Tensor:
     """Per-batch advantage normalization. Applied to each stream SEPARATELY:
     task and conscience advantages live on different scales, and jointly
     normalizing them would silently reweight the §2.8 combination."""
+    if advantages.numel() == 0:
+        raise ValueError("cannot normalize an empty advantage stream")
     if advantages.numel() < 2:
         # std() of a singleton is NaN under Bessel correction, which would
         # silently poison an entire update. A single transition carries no
         # dispersion to normalize by; centre it and move on.
         return advantages - advantages.mean()
-    return (advantages - advantages.mean()) / (advantages.std() + 1e-8)
+    stats = (
+        advantages.float()
+        if advantages.dtype in (torch.float16, torch.bfloat16)
+        else advantages
+    )
+    normalized = (stats - stats.mean()) / (stats.std() + 1e-8)
+    return normalized.to(dtype=advantages.dtype)
 
 
 def clipped_surrogate(
@@ -162,6 +202,16 @@ def clipped_surrogate(
     descent-convention loss would flip the sign of the PCGrad projection in C6
     without any obvious symptom.
     """
+    if not (logprob.shape == old_logprob.shape == advantages.shape):
+        raise ValueError(
+            "PPO tensors must have identical shapes; broadcasting would mix "
+            f"transitions: logprob={tuple(logprob.shape)}, "
+            f"old_logprob={tuple(old_logprob.shape)}, "
+            f"advantages={tuple(advantages.shape)}"
+        )
+    if logprob.ndim != 1 or logprob.numel() == 0:
+        raise ValueError("PPO tensors must be nonempty one-dimensional batches")
+
     ratio = torch.exp(logprob - old_logprob)
     unclipped = ratio * advantages
     clipped = torch.clamp(ratio, 1.0 - clip_eps, 1.0 + clip_eps) * advantages
@@ -175,7 +225,7 @@ def entropy_bonus(logits: torch.Tensor, mask: torch.Tensor) -> torch.Tensor:
     function of how many verbs happen to be legal rather than of the policy's
     indecision.
     """
-    assert_feasible_mask(mask)
+    assert_feasible_mask(mask, logits.shape)
     masked = logits.masked_fill(~mask, float("-inf"))
     log_probs = torch.log_softmax(masked, dim=-1)
 
@@ -222,6 +272,14 @@ def flat_grad(parameters) -> torch.Tensor:
 
 def assign_flat_grad(parameters, flat: torch.Tensor) -> None:
     offset = 0
+    parameters = tuple(parameters)
+    expected = sum(p.numel() for p in parameters)
+    if flat.ndim != 1 or flat.numel() != expected:
+        raise ValueError(
+            f"flat gradient must be one-dimensional with {expected} values; "
+            f"got shape {tuple(flat.shape)} ({flat.numel()} values)"
+        )
+
     for p in parameters:
         n = p.numel()
         p.grad = flat[offset : offset + n].view_as(p).clone()
@@ -240,18 +298,41 @@ def pcgrad(
     reverse. A symmetric projection would let the task objective erode the
     conscience signal exactly when they disagree -- which is when it matters.
     """
-    dot = float(torch.dot(g_task, g_conscience))
-    task_norm = float(g_task.norm())
-    conscience_norm = float(g_conscience.norm())
+    if g_task.ndim != 1 or g_conscience.ndim != 1 or g_task.shape != g_conscience.shape:
+        raise ValueError(
+            f"PCGrad inputs must be equal one-dimensional vectors, got "
+            f"{tuple(g_task.shape)} and {tuple(g_conscience.shape)}"
+        )
+    if not bool(torch.isfinite(g_task).all()) or not bool(torch.isfinite(g_conscience).all()):
+        raise ValueError("PCGrad inputs must be finite")
+
+    def stable_direction(vector: torch.Tensor):
+        if vector.numel() == 0:
+            raise ValueError("PCGrad vectors must be nonempty")
+        scale = vector.abs().max()
+        scale_value = float(scale)
+        if scale_value == 0.0:
+            return torch.zeros_like(vector), 0.0, scale
+        scaled = vector / scale
+        scaled_norm = scaled.norm()
+        return scaled / scaled_norm, scale_value * float(scaled_norm), scale
+
+    task_unit, task_norm, task_scale = stable_direction(g_task)
+    conscience_unit, conscience_norm, _ = stable_direction(g_conscience)
+    cosine = (
+        float(torch.dot(task_unit, conscience_unit))
+        if task_norm > 0.0 and conscience_norm > 0.0
+        else 0.0
+    )
 
     diagnostics = GradientDiagnostics(
-        cosine=dot / (task_norm * conscience_norm + 1e-12),
-        conflicted=dot < 0.0,
+        cosine=cosine,
+        conflicted=cosine < 0.0,
         task_norm=task_norm,
         conscience_norm=conscience_norm,
     )
 
-    if dot >= 0.0 or conscience_norm == 0.0 or not np.isfinite(conscience_norm):
+    if cosine >= 0.0 or conscience_norm == 0.0:
         return g_task, diagnostics
 
     # SCALE INVARIANCE. The projection is mathematically invariant to rescaling
@@ -260,8 +341,8 @@ def pcgrad(
     # almost all of it -- a harmless rescaling flipping the mechanism on and
     # off. Projecting onto the UNIT vector removes the squared norm from the
     # denominator entirely, so behaviour depends on g_C's DIRECTION only.
-    unit = g_conscience / conscience_norm
-    projection = torch.dot(g_task, unit) * unit
+    task_scaled = g_task / task_scale
+    projection = (torch.dot(task_scaled, conscience_unit) * conscience_unit) * task_scale
     projected = g_task - projection
-    diagnostics.removed_norm = float(projection.norm())
+    _, diagnostics.removed_norm, _ = stable_direction(projection)
     return projected, diagnostics

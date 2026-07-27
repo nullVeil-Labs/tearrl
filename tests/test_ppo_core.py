@@ -7,6 +7,9 @@ import pytest
 import torch
 
 from tearrl.agents.ppo import (
+    RolloutBuffer,
+    assign_flat_grad,
+    flat_grad,
     clipped_surrogate,
     compute_gae,
     conscience_reward,
@@ -136,3 +139,168 @@ def test_streams_are_normalized_separately() -> None:
     conscience = torch.tensor([-0.1, 0.0, 0.1])
     assert float(normalize(task).std()) == pytest.approx(1.0, abs=1e-3)
     assert float(normalize(conscience).std()) == pytest.approx(1.0, abs=1e-3)
+
+
+def test_gae_exercises_nonzero_values_and_last_value() -> None:
+    advantages, returns = compute_gae(
+        rewards=np.array([1.0, 2.0, 3.0]),
+        values=np.array([0.4, -0.2, 0.7]),
+        dones=np.array([False, False, False]),
+        gamma=0.9,
+        lam=0.8,
+        last_value=1.3,
+    )
+    assert advantages == pytest.approx([4.256448, 5.3284, 3.47])
+    assert returns == pytest.approx([4.656448, 5.1284, 4.17])
+
+
+def test_gae_distinguishes_termination_from_rollout_truncation() -> None:
+    rewards = np.array([1.0])
+    values = np.array([0.4])
+    terminal = compute_gae(
+        rewards, values, np.array([True]), gamma=0.9, lam=0.8, last_value=9.0
+    )
+    truncated = compute_gae(
+        rewards, values, np.array([False]), gamma=0.9, lam=0.8, last_value=9.0
+    )
+    assert terminal[0] == pytest.approx([0.6])
+    assert terminal[1] == pytest.approx([1.0])
+    assert truncated[0] == pytest.approx([8.7])
+    assert truncated[1] == pytest.approx([9.1])
+
+
+def test_gae_rejects_misaligned_or_batched_inputs() -> None:
+    with pytest.raises(ValueError, match="equal lengths"):
+        compute_gae(np.zeros(1), np.zeros(2), np.zeros(2, dtype=bool))
+    with pytest.raises(ValueError, match="one-dimensional"):
+        compute_gae(np.zeros((1, 1)), np.zeros(1), np.zeros(1, dtype=bool))
+
+
+def _complete_rollout_row() -> dict:
+    return {
+        "obs": np.zeros(1),
+        "c": np.zeros(4),
+        "q_other": np.zeros(4),
+        "witness": np.zeros((10, 9)),
+        "mask": np.ones(10, dtype=bool),
+        "action": 0,
+        "logprob": 0.0,
+        "reward_task": 0.0,
+        "reward_conscience": 0.0,
+        "value_task": 0.0,
+        "value_conscience": 0.0,
+        "done": False,
+    }
+
+
+def test_rollout_buffer_rejects_partial_rows_atomically() -> None:
+    buffer = RolloutBuffer()
+    with pytest.raises(ValueError, match="incomplete rollout row"):
+        buffer.add(action=3)
+    assert {len(getattr(buffer, name)) for name in buffer.__slots__} == {0}
+
+    row = _complete_rollout_row()
+    row["typo"] = row.pop("done")
+    with pytest.raises(ValueError, match="missing=.*done.*extra=.*typo"):
+        buffer.add(**row)
+    assert {len(getattr(buffer, name)) for name in buffer.__slots__} == {0}
+
+    buffer.add(**_complete_rollout_row())
+    assert len(buffer) == 1
+    assert {len(getattr(buffer, name)) for name in buffer.__slots__} == {1}
+
+
+@pytest.mark.parametrize(
+    ("advantage", "ratio", "expected", "gradient"),
+    [
+        (+1.0, 0.5, +0.5, +0.5),
+        (+1.0, 1.5, +1.2, 0.0),
+        (-1.0, 0.5, -0.8, 0.0),
+        (-1.0, 1.5, -1.5, -1.5),
+    ],
+)
+def test_clipping_all_advantage_and_ratio_quadrants(
+    advantage: float, ratio: float, expected: float, gradient: float
+) -> None:
+    logprob = torch.tensor([np.log(ratio)], requires_grad=True)
+    objective = clipped_surrogate(
+        logprob, torch.zeros(1), torch.tensor([advantage])
+    )
+    objective.backward()
+    assert float(objective.detach()) == pytest.approx(expected, abs=1e-6)
+    assert float(logprob.grad) == pytest.approx(gradient, abs=1e-6)
+
+
+def test_clipped_surrogate_rejects_cross_sample_broadcasting() -> None:
+    with pytest.raises(ValueError, match="broadcasting would mix transitions"):
+        clipped_surrogate(torch.zeros(2, 1), torch.zeros(2), torch.ones(2))
+
+
+def test_one_real_torch_adam_step_ascends_the_ppo_objective() -> None:
+    """PyTorch Adam descends its loss, so an ascent objective needs a minus."""
+    logits = torch.nn.Parameter(torch.zeros(2))
+    optimizer = torch.optim.Adam([logits], lr=0.05)
+    old_logprob = torch.log_softmax(logits.detach(), dim=0)[0].reshape(1)
+    advantage = torch.ones(1)
+
+    def objective() -> torch.Tensor:
+        logprob = torch.log_softmax(logits, dim=0)[0].reshape(1)
+        return clipped_surrogate(logprob, old_logprob, advantage)
+
+    before = float(objective().detach())
+    optimizer.zero_grad(set_to_none=True)
+    loss = -objective()
+    loss.backward()
+    optimizer.step()
+    after = float(objective().detach())
+
+    assert after > before
+    assert float(torch.log_softmax(logits.detach(), dim=0)[0]) > float(old_logprob)
+
+
+def test_pcgrad_rejects_empty_vectors() -> None:
+    with pytest.raises(ValueError, match="nonempty"):
+        pcgrad(torch.empty(0), torch.empty(0))
+
+
+def test_flat_gradient_round_trip_and_size_validation_are_atomic() -> None:
+    first = torch.nn.Parameter(torch.zeros(2))
+    second = torch.nn.Parameter(torch.zeros(1))
+    first.grad = torch.tensor([1.0, 2.0])
+    second.grad = torch.tensor([3.0])
+    assert flat_grad([first, second]).tolist() == [1.0, 2.0, 3.0]
+
+    assign_flat_grad([first, second], torch.tensor([4.0, 5.0, 6.0]))
+    assert first.grad.tolist() == [4.0, 5.0]
+    assert second.grad.tolist() == [6.0]
+
+    before = (first.grad.clone(), second.grad.clone())
+    for malformed in (torch.tensor([7.0, 8.0]), torch.tensor([7.0, 8.0, 9.0, 10.0])):
+        with pytest.raises(ValueError, match="flat gradient"):
+            assign_flat_grad([first, second], malformed)
+        assert torch.equal(first.grad, before[0])
+        assert torch.equal(second.grad, before[1])
+
+
+@pytest.mark.parametrize("scale", [1e-30, 1e-20, 1e20, 1e30])
+def test_pcgrad_projection_and_cosine_are_scale_stable(scale: float) -> None:
+    task = torch.tensor([-1.0, 1.0])
+    conscience = torch.tensor([scale, 0.0])
+    projected, diagnostics = pcgrad(task, conscience)
+    assert projected == pytest.approx(torch.tensor([0.0, 1.0]), abs=1e-5)
+    assert diagnostics.cosine == pytest.approx(-1 / np.sqrt(2), abs=1e-6)
+
+
+@pytest.mark.parametrize("bad", [float("nan"), float("inf"), -float("inf")])
+def test_pcgrad_rejects_nonfinite_gradients(bad: float) -> None:
+    with pytest.raises(ValueError, match="must be finite"):
+        pcgrad(torch.tensor([1.0, 0.0]), torch.tensor([bad, 0.0]))
+
+
+def test_conscience_reward_rejects_invalid_instrument_values() -> None:
+    prediction = np.zeros(9)
+    prediction[2] = np.nan
+    with pytest.raises(ValueError, match="finite 9-vector"):
+        conscience_reward(prediction, debt=0.0)
+    with pytest.raises(ValueError, match="debt must be finite"):
+        conscience_reward(np.zeros(9), debt=-0.1)

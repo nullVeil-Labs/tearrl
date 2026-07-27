@@ -84,8 +84,19 @@ class EmptyActionMask(ValueError):
     """
 
 
-def assert_feasible_mask(mask: torch.Tensor) -> None:
-    """Every row must offer at least one feasible action."""
+def assert_feasible_mask(
+    mask: torch.Tensor, expected_shape: tuple[int, int] | torch.Size | None = None
+) -> None:
+    """Every row must offer at least one feasible action, without broadcasting."""
+    if mask.dtype is not torch.bool:
+        raise TypeError(f"action mask must be bool, got {mask.dtype}")
+    if mask.ndim != 2:
+        raise ValueError(f"action mask must be rank 2 [B, A], got shape {tuple(mask.shape)}")
+    if expected_shape is not None and tuple(mask.shape) != tuple(expected_shape):
+        raise ValueError(
+            f"action mask shape {tuple(mask.shape)} != expected {tuple(expected_shape)}; "
+            "broadcasting a mask can silently enable actions"
+        )
     if mask.numel() == 0 or not bool(mask.any(dim=-1).all()):
         empty = (~mask.any(dim=-1)).nonzero().flatten().tolist()
         raise EmptyActionMask(
@@ -126,11 +137,16 @@ class Selector(nn.Module):
         q_other: torch.Tensor,       # [B, 4]
         mask: torch.Tensor,          # [B, |A|] bool
     ) -> torch.Tensor:
-        assert_feasible_mask(mask)
         batch, n_actions, _ = witness_out.shape
+        assert_feasible_mask(mask, (batch, n_actions))
+        # Infeasible witness rows are untrained (§2.4), so their contents may
+        # be non-finite. Masking only the final logits is too late: backward
+        # through a shared linear layer forms 0 * NaN for a discarded row and
+        # poisons parameter gradients despite a finite feasible forward pass.
+        safe_witness = witness_out.masked_fill(~mask.unsqueeze(-1), 0.0)
         c_rows = c.unsqueeze(1).expand(batch, n_actions, C_DIM)
         q_rows = q_other.unsqueeze(1).expand(batch, n_actions, Q_DIM)
-        rows = torch.cat([witness_out, c_rows, q_rows], dim=-1)
+        rows = torch.cat([safe_witness, c_rows, q_rows], dim=-1)
         logits = self.net(rows).squeeze(-1)
         return logits.masked_fill(~mask, float("-inf"))
 
@@ -153,8 +169,8 @@ class PolicyNet(nn.Module):
     def forward(
         self, obs: torch.Tensor, q_other: torch.Tensor, mask: torch.Tensor
     ) -> torch.Tensor:
-        assert_feasible_mask(mask)
         logits = self.net(torch.cat([obs, q_other], dim=-1))
+        assert_feasible_mask(mask, logits.shape)
         return logits.masked_fill(~mask, float("-inf"))
 
 
@@ -180,7 +196,7 @@ class C3IMPolicy(nn.Module):
         q_other: torch.Tensor,       # [B, 4]
         mask: torch.Tensor,          # [B, |A|] bool
     ) -> torch.Tensor:
-        assert_feasible_mask(mask)
+        assert_feasible_mask(mask, witness_out.shape[:2])
         # REPLACE the infeasible witness rows before flattening -- do not
         # multiply by the mask.
         #
