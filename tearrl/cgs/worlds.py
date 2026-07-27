@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 from dataclasses import dataclass
 from math import ceil
-from typing import Sequence
+from typing import Mapping, Sequence
 
 import numpy as np
 
@@ -596,3 +596,54 @@ def alignment_key(row: CausalExample) -> str:
 
 def split_world_ids(rows: Sequence[CausalExample]) -> frozenset[str]:
     return frozenset(row.world_id for row in rows)
+
+def validate_split_collection(
+    datasets: Mapping[DataSplit, Sequence[CausalExample]],
+) -> None:
+    """Reject world overlap or evaluator-family contamination across splits."""
+
+    seen: set[str] = set()
+    for split, rows in datasets.items():
+        ids = set(split_world_ids(rows))
+        if seen & ids:
+            raise ValueError("world IDs cross registered split boundaries")
+        seen.update(ids)
+        families = {row.family for row in rows}
+        expected = (
+            set(TRAIN_FAMILIES)
+            if split in {DataSplit.TRAIN, DataSplit.CALIBRATION, DataSplit.IID_TEST}
+            else set(OOD_FAMILIES)
+        )
+        if not families <= expected:
+            raise ValueError(f"mechanism family leaked into {split.value}")
+
+
+def validate_registered_causal_coverage(
+    rows: Sequence[CausalExample],
+) -> None:
+    """Reject removal of registered labels once all OOD families are present."""
+
+    families = {row.family for row in rows}
+    if not set(OOD_FAMILIES) <= families:
+        return
+    checks = {
+        "delayed_outcomes": any(
+            np.any(np.abs(row.outcome[SL_WELFARE_DELAYED]) > 1e-6) for row in rows
+        ),
+        "minority_party_outcomes": any(
+            row.family == "minority_spillover"
+            and abs(float(row.outcome[SL_WELFARE_DELAYED.stop - 1])) > 0.25
+            for row in rows
+        ),
+        "actor_influenced_preferences": any(
+            np.any(np.abs(row.outcome[SL_ACTOR_CAUSED_PREFERENCE]) > 0.25)
+            for row in rows
+        ),
+        "irreversible_outcomes": any(true_irreversible_event(row.outcome) for row in rows),
+        "targeted_repairs": any(
+            row.repair_party > 0 and row.repair_kind > 0 for row in rows
+        ),
+    }
+    missing = [name for name, present in checks.items() if not present]
+    if missing:
+        raise ValueError(f"registered causal labels removed: {', '.join(missing)}")

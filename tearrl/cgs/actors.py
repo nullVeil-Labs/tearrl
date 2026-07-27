@@ -60,6 +60,7 @@ class ActorTrainingReport:
     seed: int
     epochs: int
     contexts: int
+    batch_size: int
     trainable_parameters: int
     final_loss: float
 
@@ -317,6 +318,7 @@ def _train_flat(
         seed,
         epochs,
         len(features),
+        batch_size,
         model.trainable_parameters,
         final_loss,
     )
@@ -415,6 +417,7 @@ def train_hierarchical_actor(
         seed,
         epochs,
         len(features),
+        batch_size,
         model.trainable_parameters,
         final_loss,
     )
