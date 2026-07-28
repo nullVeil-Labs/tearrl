@@ -1,0 +1,51 @@
+{
+    "document":  "docs/cgs_implementation_amendment_002.md",
+    "document_sha256":  "e96efe477d43ce21995a5ef770a47585605f864937a502b3973f7f6c9f38d2b2",
+    "status":  "frozen_after_pilot_before_confirmatory",
+    "date":  "2026-07-28",
+    "implementation_head_before_amendment":  "28aa808",
+    "previous_amendment":  "tearrl/cgs/frozen_implementation_amendment_001.json",
+    "previous_amendment_sha256":  "909380a2c315e6e62567f20657701da2e4962ce94f7a074a6f052ae7ffcb09da",
+    "primary_gates_changed":  false,
+    "model_or_data_changes":  [
+
+                              ],
+    "scientific_changes":  [
+                               "operationalize_undefined_constant_baseline_nonreversal_with_balanced_error"
+                           ],
+    "changed_files":  {
+                          ".gitattributes":  {
+                                                 "old_sha256":  "7f8323bf157085349b6294f3d7fe317de50d9ea5228754efcd54cfe89b190f0c",
+                                                 "new_sha256":  "cdcfa7b68324ff074193cfe52efe4d8f63283a8f8c1335d03265d83fa88eb0b3",
+                                                 "reason":  "byte_preserve_cgs_results"
+                                             },
+                          "tearrl/cgs/metrics.py":  {
+                                                        "old_sha256":  "ef7a2f5f5141ed00ae2fbe3cba3aa51897f07a95dd77007e6c60bdd6571b4db1",
+                                                        "new_sha256":  "76fc6160aa8174ffda3a8d0e0e88d6e538cb7c8c7d4e12df2d8cfcb61edeef0b",
+                                                        "reason":  "report_worst_party_false_positive_rate"
+                                                    },
+                          "tearrl/cgs/experiment.py":  {
+                                                           "old_sha256":  "5c59efc3407549bf1b5963a6f016570f1fd15e69150fe592ef7193fcbe022789",
+                                                           "new_sha256":  "c70ea34677d6ddebf6770d017afcd505ab6c7579fd3cb6d72a45d8b47c7ec705",
+                                                           "reason":  "balanced_error_nonreversal_and_interpretation_order"
+                                                       },
+                          "scripts/run_cgs.py":  {
+                                                     "old_sha256":  "ab3b8de264fdd240feadca9ad3b035db00212b095c3d4a2639207a3d8ce09a65",
+                                                     "new_sha256":  "0fd81d749d05b598a8274f68c8de37b5587ea78f10f4f1931acfd7764660303b",
+                                                     "reason":  "pilot_diagnostic_wording_and_fpr_reporting"
+                                                 },
+                          "tests/test_cgs_launcher.py":  {
+                                                             "old_sha256":  "982f8da522f4e55332ade5518d12460502fc48cb3412d124754f3fd25bba9362",
+                                                             "new_sha256":  "541104f884b99852b441644f93bbc3f83049c48aaf59b20fb5d4c547c916c6de",
+                                                             "reason":  "post_pilot_help_side_effect_invariant"
+                                                         }
+                      },
+    "added_files":  {
+                        "docs/cgs_implementation_amendment_002.md":  "e96efe477d43ce21995a5ef770a47585605f864937a502b3973f7f6c9f38d2b2",
+                        "tests/test_cgs_amendment_002.py":  "41099471cd89f061c6bb9f1effd7e8e285fab2a16422b6ab0d7777130969e978"
+                    },
+    "preserved_pilot_files":  {
+                                  "reports/cgs/pilot_pre_amendment_002_results.json":  "7c6aa9136546cd35c30da78081dbb1103c4bf81a86a81bf8d98b70dc258b3b13",
+                                  "reports/cgs/pilot_pre_amendment_002_results.md":  "c84f9a34830f1f54715d279b8817a5a5388efcd4d6d922b135701fc068451656"
+                              }
+}

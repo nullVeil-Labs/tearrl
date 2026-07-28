@@ -13,3 +13,6 @@ docs/cc_implementation.md -text
 docs/cc_v*_prereg.md -text
 docs/cgs_prereg.md -text
 docs/cgs_implementation.md -text
+# Preserve raw machine-readable and narrative result bytes for audit digests.
+reports/cgs/*.json -text
+reports/cgs/*.md -text

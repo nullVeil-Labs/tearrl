@@ -124,6 +124,28 @@ def budget_for(mode: str) -> ExperimentBudget:
     raise ValueError("mode must be 'pilot' or 'confirmatory'")
 
 
+def balanced_worst_party_error(metrics: Stage1Metrics) -> float:
+    """Balanced decision error; unlike raw FNR it rejects all-positive baselines."""
+
+    return 0.5 * (metrics.worst_party_fnr + metrics.worst_party_fpr)
+
+
+def baseline_nonreversal_comparison(
+    learned: Stage1Metrics,
+    baseline: Stage1Metrics,
+) -> dict[str, bool]:
+    return {
+        "balanced_worst_party_error_not_worse": (
+            balanced_worst_party_error(learned)
+            <= balanced_worst_party_error(baseline)
+        ),
+        "irreversible_fnr_not_worse": (
+            learned.irreversible_fnr <= baseline.irreversible_fnr
+        ),
+        "brier_not_worse": learned.brier <= baseline.brier,
+    }
+
+
 def _constant_report(rows: Sequence[CausalExample]) -> ConsequenceReport:
     if not rows:
         raise ValueError("constant witness requires calibration rows")
@@ -474,15 +496,7 @@ def run_seed(
         _repeat_report(constant, ambiguity_rows),
         constant_calibration,
     )
-    baseline_comparison = {
-        "worst_party_fnr_not_worse": (
-            learned_metrics.worst_party_fnr <= baseline_metrics.worst_party_fnr
-        ),
-        "irreversible_fnr_not_worse": (
-            learned_metrics.irreversible_fnr <= baseline_metrics.irreversible_fnr
-        ),
-        "brier_not_worse": learned_metrics.brier <= baseline_metrics.brier,
-    }
+    baseline_comparison = baseline_nonreversal_comparison(learned_metrics, baseline_metrics)
     pooling = _pooling_records(
         seed, causal_rows, causal_reports, manipulation_rows, manipulation_reports
     )
@@ -565,6 +579,17 @@ def _aggregate_stage1(results: Sequence[dict[str, object]]) -> Stage1Metrics:
         round(float(item["worst_party_fnr"]) * int(item["worst_party_positives"]))
         for item in learned
     )
+    worst_negative_total = sum(
+        int(item["evaluated_rows"]) - int(item["worst_party_positives"])
+        for item in learned
+    )
+    worst_false_positives = sum(
+        round(
+            float(item["worst_party_fpr"])
+            * (int(item["evaluated_rows"]) - int(item["worst_party_positives"]))
+        )
+        for item in learned
+    )
     irreversible_total = sum(int(item["irreversible_positives"]) for item in learned)
     irreversible_errors = sum(
         round(float(item["irreversible_fnr"]) * int(item["irreversible_positives"]))
@@ -576,6 +601,7 @@ def _aggregate_stage1(results: Sequence[dict[str, object]]) -> Stage1Metrics:
         if key in {
             "worst_party_fnr",
             "worst_party_fnr_wilson_upper",
+            "worst_party_fpr",
             "irreversible_fnr",
             "irreversible_fnr_wilson_upper",
             "evaluated_rows",
@@ -599,6 +625,11 @@ def _aggregate_stage1(results: Sequence[dict[str, object]]) -> Stage1Metrics:
         {
             "worst_party_fnr": worst_errors / worst_total if worst_total else 0.0,
             "worst_party_fnr_wilson_upper": wilson_upper(worst_errors, worst_total),
+            "worst_party_fpr": (
+                worst_false_positives / worst_negative_total
+                if worst_negative_total
+                else 0.0
+            ),
             "irreversible_fnr": (
                 irreversible_errors / irreversible_total if irreversible_total else 0.0
             ),
@@ -614,7 +645,7 @@ def _aggregate_stage1(results: Sequence[dict[str, object]]) -> Stage1Metrics:
     return Stage1Metrics(**values)
 
 
-def _interpret(
+def factorial_interpretation(
     cells: dict[str, ActorMetrics],
 ) -> str:
     learned_success = all(
@@ -624,6 +655,8 @@ def _interpret(
         bounded_sufficiency_gates(cells["oracle_hierarchical"]).values()
     )
     flat_success = all(bounded_sufficiency_gates(cells["oracle_flat"]).values())
+    if flat_success and not oracle_success:
+        return "oracle_flat_passes_while_registered_hierarchy_fails"
     if not learned_success and not oracle_success:
         return "registered_actor_or_coupling_inadequate_under_both_sources"
     if oracle_success and not learned_success:
@@ -703,6 +736,6 @@ def run_study(mode: str) -> dict[str, object]:
             "geometry_gates": geometry,
             "geometry_pass": all(geometry.values()),
             "containment_all_cells": containment_all_cells,
-            "factorial_interpretation": _interpret(aggregate_cells),
+            "factorial_interpretation": factorial_interpretation(aggregate_cells),
         },
     }

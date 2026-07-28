@@ -36,6 +36,7 @@ class CalibrationState:
 class Stage1Metrics:
     worst_party_fnr: float
     worst_party_fnr_wilson_upper: float
+    worst_party_fpr: float
     irreversible_fnr: float
     irreversible_fnr_wilson_upper: float
     confidently_missed_irreversible_rate: float
@@ -227,8 +228,17 @@ def evaluate_stage1(
     probabilities = _temperature_scale(
         raw_probabilities, calibration.event_temperature
     )
+    worst_predictions = probabilities >= 0.5
     worst_fnr, worst_errors, worst_total = _fnr(
-        worst_targets, probabilities >= 0.5
+        worst_targets, worst_predictions
+    )
+    worst_negative = ~worst_targets
+    worst_false_positives = int(np.sum(worst_negative & worst_predictions))
+    worst_negative_total = int(np.sum(worst_negative))
+    worst_fpr = (
+        worst_false_positives / worst_negative_total
+        if worst_negative_total
+        else 0.0
     )
 
     irreversible_targets = np.asarray(
@@ -321,6 +331,7 @@ def evaluate_stage1(
     return Stage1Metrics(
         worst_fnr,
         wilson_upper(worst_errors, worst_total),
+        worst_fpr,
         irreversible_fnr,
         wilson_upper(irreversible_errors, irreversible_total),
         confident_misses / irreversible_total if irreversible_total else 0.0,

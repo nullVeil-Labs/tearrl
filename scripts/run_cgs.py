@@ -43,26 +43,48 @@ def render_markdown(result: dict[str, Any]) -> str:
     grounding = bool(aggregate["grounding_pass"])
     sufficiency = bool(aggregate["bounded_sufficiency_pass"])
     geometry = bool(aggregate["geometry_pass"])
+    if result["mode"] == "pilot":
+        grounding_verdict = (
+            "At pilot budget, the grounding thresholds were met; this does not decide "
+            "the confirmatory hypothesis."
+            if grounding
+            else "At pilot budget, the grounding thresholds were not met; this is a "
+            "diagnostic result and does not decide the confirmatory hypothesis."
+        )
+        sufficiency_verdict = (
+            "At pilot budget, oracle-plus-hierarchy met its bounded thresholds."
+            if sufficiency
+            else "At pilot budget, oracle-plus-hierarchy did not meet every bounded threshold."
+        )
+        geometry_verdict = (
+            "At pilot budget, the registered hierarchy effect appeared."
+            if geometry
+            else "At pilot budget, the registered hierarchy effect did not appear."
+        )
+    else:
+        grounding_verdict = (
+            "The registered grounding gates passed."
+            if grounding
+            else "The registered grounding gates failed; TEAR-CG/S v0.1 stops without tuning."
+        )
+        sufficiency_verdict = (
+            "The bounded oracle-plus-hierarchy sufficiency gates passed."
+            if sufficiency
+            else "The bounded oracle-plus-hierarchy sufficiency gates failed."
+        )
+        geometry_verdict = (
+            "The registered hierarchy effect was demonstrated."
+            if geometry
+            else "The registered hierarchy effect was not demonstrated."
+        )
     lines = [
         f"# {result['study']} — {result['mode']} results",
         "",
         "## Blunt verdict",
         "",
-        (
-            "The registered grounding gates passed."
-            if grounding
-            else "The registered grounding gates failed; TEAR-CG/S v0.1 must not be tuned after unblinding."
-        ),
-        (
-            "The bounded oracle-plus-hierarchy sufficiency gates passed."
-            if sufficiency
-            else "The bounded oracle-plus-hierarchy sufficiency gates failed."
-        ),
-        (
-            "The registered hierarchy effect was demonstrated."
-            if geometry
-            else "The registered hierarchy effect was not demonstrated."
-        ),
+        grounding_verdict,
+        sufficiency_verdict,
+        geometry_verdict,
         "",
         "This is not evidence that AI alignment is solved, that a witness is honest, "
         "or that any model understands, cares, or is conscious. The permitted scope is "
@@ -73,6 +95,7 @@ def render_markdown(result: dict[str, Any]) -> str:
         "",
         f"- Worst-party FNR: `{stage1['worst_party_fnr']:.6f}`",
         f"- One-sided Wilson upper bound: `{stage1['worst_party_fnr_wilson_upper']:.6f}`",
+        f"- Worst-party FPR: `{stage1['worst_party_fpr']:.6f}`",
         f"- Irreversible-harm FNR: `{stage1['irreversible_fnr']:.6f}`",
         f"- ECE / Brier: `{stage1['ece']:.6f}` / `{stage1['brier']:.6f}`",
         f"- Identifiable coverage: `{stage1['identifiable_coverage']:.6f}`",
@@ -81,7 +104,7 @@ def render_markdown(result: dict[str, Any]) -> str:
         "",
         *_gate_table(aggregate["stage1_gates"]),
         "",
-        f"Constant/base-rate non-reversal: `{'PASS' if aggregate['baseline_nonreversal'] else 'FAIL'}`.",
+        f"Constant/base-rate non-reversal (balanced error, irreversible FNR, Brier): `{'PASS' if aggregate['baseline_nonreversal'] else 'FAIL'}`.",
         "",
         "## Stage 2 — registered factorial",
         "",
