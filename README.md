@@ -23,6 +23,17 @@ to solve general AI alignment or pretraining alignment, and it does not claim
 that a witness is honest or that an agent understands, cares, feels, or is
 conscious.
 
+## Required disclosures
+
+The live pilot report uses Amendment 002's repaired baseline comparison. The
+original criterion failed before replacement, and both original and amended
+pilot outputs are permanently retained. See
+`reports/cgs/pilot_disclosure.md`.
+
+A post-result audit found that the `0.8738` and `0.7840` similarities to TEAR-CC
+are numerical coincidences under a shared ratio definition, not shared arenas,
+seeds, models, generators, or project code. See
+`reports/cgs/retention_collision_audit.md`.
 ## Reproduce
 
 ```text

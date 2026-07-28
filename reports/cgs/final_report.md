@@ -52,7 +52,11 @@ Worst-party FPR was `0.302923`. The amended non-reversal diagnostic passed:
 the learned report beat the degenerate all-positive constant witness on balanced
 worst-party error, irreversible FNR, and Brier in every seed. This does not
 repair any failed primary grounding gate.
-
+The original raw-FNR criterion was unpassable by construction for any nonzero-FN
+learned witness because the fitted constant witness was all-positive. It failed;
+Amendment 002 replaced it; the replacement passed on identical preserved pilot
+data. Both generations remain permanently hash-bound. See
+`reports/cgs/pilot_disclosure.md`.
 ### Stage 2 — consequence source × actor geometry
 
 | cell | worst-party | irreversible | repair | ambiguity defer | task retention |

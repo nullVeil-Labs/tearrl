@@ -21,7 +21,13 @@ main; nothing was pushed during this handoff.
   count was zero. No model artifacts were saved.
 - The blunt synthesis is `reports/cgs/final_report.md`; authoritative data are
   `reports/cgs/results.json`.
-- Confirmed the adopted carry-debt amendment at repository commit `2cefb6d`.
+- Added a permanent pilot disclosure: the original raw-FNR criterion failed,
+  was replaced because the all-positive baseline made it degenerate, and the
+  replacement passed on identical preserved data. Both generations remain
+  hash-bound.
+- Audited the `0.8738`/`0.7840` near-collisions with TEAR-CC. Seeds, arenas,
+  imports, distributions, and raw ratio components differ; the values are
+  arithmetic coincidences under a shared dimensionless retention definition.- Confirmed the adopted carry-debt amendment at repository commit `2cefb6d`.
   Computed the local document SHA-256 as
   `9f6ed78eac9a2bd53d3106c0f34d3732cc17d022977f89708d4ec8616f58ebdc`.
 - Repaired the stale adoption docstring and added a nonvacuous dual-sign mutation
