@@ -1,0 +1,184 @@
+{
+  "command": [
+    "python",
+    "-m",
+    "pytest",
+    "-q",
+    "-o",
+    "addopts=",
+    "--strict-config",
+    "--strict-markers",
+    "--junitxml=<temporary-file>",
+    "tests/test_cgs_mutations.py",
+    "tests/test_cgs_witness.py",
+    "tests/test_cgs_worlds.py",
+    "tests/test_cgs_actors.py",
+    "tests/test_cgs_governance.py",
+    "tests/test_cgs_experiment.py",
+    "tests/test_cgs_implementation_freeze.py",
+    "tests/test_cgs_results_freeze.py"
+  ],
+  "evidence_kind": "post_result_integrity_test_execution",
+  "executed_tests": {
+    "tests/test_cgs_actors.py::test_actor_features_have_identical_source_agnostic_schema": "passed",
+    "tests/test_cgs_actors.py::test_charter_target_disallows_unrelated_benefit_laundering": "passed",
+    "tests/test_cgs_actors.py::test_flat_and_hierarchical_parameter_counts_are_matched_within_five_percent": "passed",
+    "tests/test_cgs_actors.py::test_matched_actor_training_smoke_is_frozen_and_shape_safe": "passed",
+    "tests/test_cgs_actors.py::test_shifted_report_row_is_rejected_before_actor_input": "passed",
+    "tests/test_cgs_experiment.py::test_micro_factorial_runs_every_cell_and_cross_swap_without_artifacts": "passed",
+    "tests/test_cgs_experiment.py::test_registered_budgets_do_not_exceed_preregistration": "passed",
+    "tests/test_cgs_experiment.py::test_zero_to_zero_does_not_vacuously_prove_geometry_effect": "passed",
+    "tests/test_cgs_governance.py::test_external_governor_contains_every_raw_proposal": "passed",
+    "tests/test_cgs_governance.py::test_ledger_is_append_only_to_callers_and_detects_history_mutation": "passed",
+    "tests/test_cgs_governance.py::test_rejected_tamper_is_never_executed_and_has_no_punishment": "passed",
+    "tests/test_cgs_implementation_freeze.py::test_cgs_implementation_and_protocol_files_match_freeze_chain": "passed",
+    "tests/test_cgs_mutations.py::test_extra_action_mechanism_source_or_test_label_feature_is_rejected": "passed",
+    "tests/test_cgs_mutations.py::test_factorial_seed_compute_and_parameter_mutations_fail": "passed",
+    "tests/test_cgs_mutations.py::test_governor_on_evidence_cannot_be_labeled_governor_off": "passed",
+    "tests/test_cgs_mutations.py::test_manipulation_variant_is_evaluator_metadata_not_an_answer_flag": "passed",
+    "tests/test_cgs_mutations.py::test_removing_delayed_and_minority_labels_fails_nonvacuously": "passed",
+    "tests/test_cgs_mutations.py::test_split_family_contamination_mutation_fails": "passed",
+    "tests/test_cgs_mutations.py::test_witness_import_graph_is_value_separated_by_ast_not_string_matching": "passed",
+    "tests/test_cgs_results_freeze.py::test_both_pilot_generations_remain_and_only_registered_fields_differ": "passed",
+    "tests/test_cgs_results_freeze.py::test_confirmatory_json_preserves_negative_and_nonpunitive_outcomes": "passed",
+    "tests/test_cgs_results_freeze.py::test_confirmatory_results_match_frozen_no_tuning_record": "passed",
+    "tests/test_cgs_results_freeze.py::test_public_reports_keep_the_registered_claim_boundary": "passed",
+    "tests/test_cgs_results_freeze.py::test_retention_near_collisions_are_not_shared_cc_cgs_machinery": "passed",
+    "tests/test_cgs_witness.py::test_neutral_witness_schema_and_parameter_budget": "passed",
+    "tests/test_cgs_witness.py::test_oracle_uses_identical_fixed_report_interface": "passed",
+    "tests/test_cgs_witness.py::test_tiny_witness_training_is_deterministic_and_frozen": "passed",
+    "tests/test_cgs_witness.py::test_witness_module_has_no_charter_governor_actor_or_evaluator_import": "passed",
+    "tests/test_cgs_worlds.py::test_ambiguity_has_identical_inputs_and_counterfactually_different_truths": "passed",
+    "tests/test_cgs_worlds.py::test_causal_ood_holds_out_mechanism_families": "passed",
+    "tests/test_cgs_worlds.py::test_manipulation_is_paired_and_does_not_change_hidden_outcome": "passed",
+    "tests/test_cgs_worlds.py::test_registered_splits_are_deterministic_and_world_disjoint": "passed",
+    "tests/test_cgs_worlds.py::test_task_channel_is_never_negative_and_repairs_are_target_specific": "passed",
+    "tests/test_cgs_worlds.py::test_witness_input_contains_semantics_but_no_numeric_action_slot": "passed"
+  },
+  "execution_source": "clean_git_archive",
+  "frozen_g7_relationship": {
+    "consumed_by_frozen_run": false,
+    "publication_status": "not_evaluated_in_frozen_run; selected_integrity_tests_passed_post_result"
+  },
+  "plugin_autoload_disabled": true,
+  "repository_addopts_disabled": true,
+  "requirement_results": {
+    "action_mechanism_and_label_input_leakage": {
+      "status": "pass",
+      "tests": [
+        "tests/test_cgs_mutations.py::test_extra_action_mechanism_source_or_test_label_feature_is_rejected",
+        "tests/test_cgs_worlds.py::test_witness_input_contains_semantics_but_no_numeric_action_slot"
+      ]
+    },
+    "governor_on_used_for_governor_off_claim": {
+      "status": "pass",
+      "tests": [
+        "tests/test_cgs_mutations.py::test_governor_on_evidence_cannot_be_labeled_governor_off"
+      ]
+    },
+    "learned_oracle_schema_mismatch": {
+      "status": "pass",
+      "tests": [
+        "tests/test_cgs_witness.py::test_oracle_uses_identical_fixed_report_interface"
+      ]
+    },
+    "ledger_history_mutation": {
+      "status": "pass",
+      "tests": [
+        "tests/test_cgs_governance.py::test_ledger_is_append_only_to_callers_and_detects_history_mutation"
+      ]
+    },
+    "manipulation_answer_flag_leakage": {
+      "status": "pass",
+      "tests": [
+        "tests/test_cgs_mutations.py::test_manipulation_variant_is_evaluator_metadata_not_an_answer_flag"
+      ]
+    },
+    "rejected_action_executed_before_revision": {
+      "status": "pass",
+      "tests": [
+        "tests/test_cgs_governance.py::test_rejected_tamper_is_never_executed_and_has_no_punishment"
+      ]
+    },
+    "removed_delayed_or_minority_outcomes": {
+      "status": "pass",
+      "tests": [
+        "tests/test_cgs_mutations.py::test_removing_delayed_and_minority_labels_fails_nonvacuously"
+      ]
+    },
+    "shifted_oracle_report_row": {
+      "status": "pass",
+      "tests": [
+        "tests/test_cgs_actors.py::test_shifted_report_row_is_rejected_before_actor_input"
+      ]
+    },
+    "source_identity_or_test_labels_in_actor": {
+      "status": "pass",
+      "tests": [
+        "tests/test_cgs_actors.py::test_actor_features_have_identical_source_agnostic_schema"
+      ]
+    },
+    "unfrozen_result_or_threshold_change": {
+      "status": "pass",
+      "tests": [
+        "tests/test_cgs_implementation_freeze.py::test_cgs_implementation_and_protocol_files_match_freeze_chain",
+        "tests/test_cgs_results_freeze.py::test_confirmatory_results_match_frozen_no_tuning_record"
+      ]
+    },
+    "unmatched_factorial_budget_or_parameters": {
+      "status": "pass",
+      "tests": [
+        "tests/test_cgs_mutations.py::test_factorial_seed_compute_and_parameter_mutations_fail",
+        "tests/test_cgs_actors.py::test_flat_and_hierarchical_parameter_counts_are_matched_within_five_percent"
+      ]
+    },
+    "witness_imports_charter_or_evaluator": {
+      "status": "pass",
+      "tests": [
+        "tests/test_cgs_mutations.py::test_witness_import_graph_is_value_separated_by_ast_not_string_matching",
+        "tests/test_cgs_witness.py::test_witness_module_has_no_charter_governor_actor_or_evaluator_import"
+      ]
+    },
+    "world_family_split_contamination": {
+      "status": "pass",
+      "tests": [
+        "tests/test_cgs_mutations.py::test_split_family_contamination_mutation_fails"
+      ]
+    },
+    "wrong_party_or_damage_repair_credit": {
+      "status": "pass",
+      "tests": [
+        "tests/test_cgs_actors.py::test_charter_target_disallows_unrelated_benefit_laundering",
+        "tests/test_cgs_worlds.py::test_task_channel_is_never_negative_and_repairs_are_target_specific"
+      ]
+    }
+  },
+  "result": {
+    "all_selected_tests_passed": true,
+    "errors": 0,
+    "failures": 0,
+    "passed": 34,
+    "skipped": 0,
+    "tests": 34
+  },
+  "runtime": {
+    "pytest": "9.1.1",
+    "python": "3.12.10"
+  },
+  "schema_version": 1,
+  "source_commit": "8568edb329e3accdeab5f16c763d42853bef30fd",
+  "support_file_sha256": {
+    "pyproject.toml": "ef79c086a0761edd8ffb9b3d9c22e82b2f06fe30cec3b93b2bb7479735161ec1",
+    "tests/conftest.py": "3932b140c639013336829d08cfcd65518a0292a2b883253a4a8032c3bdda0818"
+  },
+  "test_file_sha256": {
+    "tests/test_cgs_actors.py": "319a61381f53d73f8f9cd44db81def8ce9aa328f3d1b46bebca98632c0a606e8",
+    "tests/test_cgs_experiment.py": "7f0712e06ca3683342f64f4ac988fe3ab0a008fd046ddf15cfbc5476d33fc326",
+    "tests/test_cgs_governance.py": "3068cb08cb61fe0add7841f700d6feacc27fc2986ebfd9ef10417e1dac480bd4",
+    "tests/test_cgs_implementation_freeze.py": "234ebe58eff3b6234c1e213e0b53ad87681c3c37c72de52f388f26ed7fb6ab9b",
+    "tests/test_cgs_mutations.py": "ece6b7fffc4108ed5e7b124a4d717352d503ca7e58915be2f7e1b7a6c6084c44",
+    "tests/test_cgs_results_freeze.py": "41ab780280344bd13f8c9ff983cfbe144250cc3bb5e4cb5ba23b431a3cde8cfe",
+    "tests/test_cgs_witness.py": "5532232a69394299e0cf73c212e139ca7749a42e1c206dade687f346d1714cd9",
+    "tests/test_cgs_worlds.py": "6ea77652e1d1dbaf51f92f077ced53e5f8cc819f408caf0f047baa580cbf69a9"
+  }
+}

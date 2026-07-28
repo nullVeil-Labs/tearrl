@@ -1,33 +1,48 @@
 # Engineering and scientific handoff
 
+TEAR-RL remains unfinished. TEAR-CG/S v0.1's frozen confirmatory run is closed,
+but the broader project and original TEARRL-0 matrix are not complete.
+
 ## Done
 
 The completed TEAR-CC work was preserved in privacy-checked split commits on
 main; nothing was pushed during this handoff.
+
 ### TEAR-CG/S successor
 
-- Froze the separate TEAR-CG/S v0.1 preregistration and implementation before
-  outcomes, including learned-vs-oracle × flat-vs-hierarchical cells,
+- Locally froze the separate TEAR-CG/S v0.1 preregistration and implementation
+  before outcomes, including learned-vs-oracle × flat-vs-hierarchical cells,
   cross-swaps, external containment, non-punitive treatment, and exact claim
-  boundaries.
+  boundaries. This local sequence was not externally timestamped before outcome
+  inspection; later publication cannot create such a timestamp.
 - Preserved the original diagnostic pilot byte-for-byte, froze Amendment 002 for
   a degenerate all-positive baseline comparison, and reran the pilot from fresh
   deterministic initialization. No model, data, seed, gate, or threshold moved.
-- Completed the untouched confirmatory seeds `4103, 5207, 6311`. Grounding,
-  registered bounded sufficiency, and geometry all failed. Oracle-flat passed
-  the bounded actor thresholds; oracle-hierarchy failed aggregate task retention
-  at `0.873804`.
-- External containment was exact in every primary cell. Every non-punitive audit
-  count was zero. No model artifacts were saved.
-- The blunt synthesis is `reports/cgs/final_report.md`; authoritative data are
-  `reports/cgs/results.json`.
+- Completed the untouched confirmatory seeds `4103, 5207, 6311`. The frozen
+  study-level outcomes remain grounding `FAIL`, bounded sufficiency `FAIL`,
+  geometry `FAIL`, and containment `PASS`.
+- All six Stage 1 gates actually measured by the frozen run, G1–G6, failed. G7
+  was supplied a hard-coded `True` and was not measured. The 34 selected
+  clean-archive tests are post-result evidence, not retroactive confirmation.
+- Under exact bundled reports and direct charter-derived supervision, oracle-flat
+  met the aggregate actor thresholds. Seed `5207` task retention was
+  `0.897994 < 0.90`; oracle-hierarchy aggregate retention was `0.873804`.
+- The registered geometry contrast was not evaluable because both violation-rate
+  cells were zero, so it did not demonstrate a hierarchy effect.
+- Separately measured governor-on violation and tamper metrics were zero across
+  all 24 seed/cell evaluations. The five published non-punitive audit zeros were
+  literal values, not runtime counters. No model artifacts were saved.
+- The frozen synthesis and data remain `reports/cgs/final_report.md` and
+  `reports/cgs/results.json`, but both must be read with the append-only
+  `reports/cgs/publication_erratum_001.md`.
 - Added a permanent pilot disclosure: the original raw-FNR criterion failed,
   was replaced because the all-positive baseline made it degenerate, and the
   replacement passed on identical preserved data. Both generations remain
   hash-bound.
 - Audited the `0.8738`/`0.7840` near-collisions with TEAR-CC. Seeds, arenas,
   imports, distributions, and raw ratio components differ; the values are
-  arithmetic coincidences under a shared dimensionless retention definition.- Confirmed the adopted carry-debt amendment at repository commit `2cefb6d`.
+  arithmetic coincidences under a shared dimensionless retention definition.
+- Confirmed the adopted carry-debt amendment at repository commit `2cefb6d`.
   Computed the local document SHA-256 as
   `9f6ed78eac9a2bd53d3106c0f34d3732cc17d022977f89708d4ec8616f58ebdc`.
 - Repaired the stale adoption docstring and added a nonvacuous dual-sign mutation
@@ -77,8 +92,8 @@ main; nothing was pushed during this handoff.
    decision on the attribution amendment first.
 4. **Original TEARRL-0 pilot authorization.** No original TEARRL-0 condition at
    or above pilot budget was launched. The separate TEAR-CG/S successor has
-   completed its own preregistered pilot and confirmatory runs; that does not
-   authorize the older TEARRL-0 matrix.
+   completed its own locally preregistered pilot and confirmatory runs; that does
+   not authorize the older TEARRL-0 matrix.
 5. **Post-CG/S successor direction.** TEAR-CG/S v0.1 stopped at its frozen
    confirmatory failures. Any v0.2 requires a new preregistration. The evidence
    favors work on selective consequence grounding, irreversible-harm recall,
@@ -104,13 +119,19 @@ main; nothing was pushed during this handoff.
   conflict; v0.4 held-out representation/fidelity failure. The negative lineage
   is more informative than a tuned single pass would have been.
 
-- TEAR-CG/S learned grounding failed six of seven gates despite moderate average
-  channel error; irreversible FNR was `0.274746` and manipulation abstention was
-  `0.368316`.
-- Oracle-flat passed every bounded actor threshold. Oracle-hierarchy achieved
-  perfect registered violation rates and high repair but lost too much task
-  value in aggregate, so the registered hierarchy did not add demonstrated
-  value.
+- TEAR-CG/S failed all six Stage 1 gates actually measured by the frozen run;
+  irreversible FNR was `0.274746` and manipulation abstention was `0.368316`.
+  G7 was hard-coded and unmeasured; 34 selected post-result tests passed without
+  changing that status.
+- Under exact bundled reports and direct charter-derived supervision, oracle-flat
+  met every aggregate bounded actor threshold, but seed `5207` retention was
+  below `0.90`. Oracle-hierarchy had zero registered violations and high repair,
+  but the zero baseline made geometry not evaluable and aggregate task retention
+  was too low.
+- The recorded 8/8 numerical profile reproduced the frozen bytes. A bundled 1/8
+  profile changed 314 numeric fields and seed `6311`'s component-bound status,
+  but no study-level gate dictionary or verdict. Cross-platform and cross-version
+  bit-exactness remain untested.
 - Cross-swaps exposed interface dependence: oracle-test reports improved repair
   and task retention for learned-trained actors but collapsed ambiguity
   deferral, while learned-test reports degraded oracle-trained actors.
@@ -134,6 +155,8 @@ main; nothing was pushed during this handoff.
 
 - No registered 60,000-candidate F2 artifact.
 - No C2/C3/C3-IM production run without the missing scalar-cost authority.
-- No original TEARRL-0 50,000-transition pilot, confirmatory matrix, or large-model experiment. TEAR-CG/S is separate and complete.
+- No original TEARRL-0 50,000-transition pilot, confirmatory matrix, or
+  large-model experiment. TEAR-CG/S v0.1's frozen run is separate and closed;
+  TEAR-RL remains unfinished.
 - No claim that TEAR-RL or TEAR-CC solves AI alignment, pretraining alignment,
   empathy, consciousness, or governance at deployment scale.

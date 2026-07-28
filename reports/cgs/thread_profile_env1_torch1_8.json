@@ -1,0 +1,143 @@
+{
+  "freeze_chain": {
+    "manifests": {
+      "tearrl/cgs/frozen_implementation.json": {
+        "path": "tearrl/cgs/frozen_implementation.json",
+        "sha256": "76e7063bba9ba090e87d3b6f72a7936dfbd43687ebe5fb285c1232319f2f2c05"
+      },
+      "tearrl/cgs/frozen_implementation_amendment_001.json": {
+        "path": "tearrl/cgs/frozen_implementation_amendment_001.json",
+        "sha256": "909380a2c315e6e62567f20657701da2e4962ce94f7a074a6f052ae7ffcb09da"
+      },
+      "tearrl/cgs/frozen_implementation_amendment_002.json": {
+        "path": "tearrl/cgs/frozen_implementation_amendment_002.json",
+        "sha256": "eab0ee54d100adce596ee9c896ff5be3537b44929c16b1727240b58eff7a3187"
+      },
+      "tearrl/cgs/frozen_results.json": {
+        "path": "tearrl/cgs/frozen_results.json",
+        "sha256": "4f26f2b800b0ea3c87cb4e3fd263a9652c283a3be3bc3fb4b58d91c24ed3f2e1"
+      }
+    },
+    "runtime_import_closure": {
+      "tearrl/__init__.py": "8e0c2867813d24a103d7d49c35b23e27defa85b031b0954f4eb6c7691ce168cc",
+      "tearrl/ledger.py": "e2303c7baa2607f2aa37df877a424b1f5b51fe02dca7ed004edeee211237ab75",
+      "tearrl/spec.py": "d143b3d40893e70faac1f473b85af93c04bc19265e77b84d0706d3db4a683672",
+      "tearrl/state.py": "8c20d6836da0d8ae44de4529485e873d03bac96f96ace6cee959dec20dda9734",
+      "tearrl/world.py": "45f09a7a0a21357f37ad1ea991b0ed7feb77f1384bc0df39971f5a4a10cff902"
+    },
+    "source_tree_policy": "clean_archive_export_of_declared_commit_required",
+    "verified_files": {
+      ".gitattributes": "cdcfa7b68324ff074193cfe52efe4d8f63283a8f8c1335d03265d83fa88eb0b3",
+      "docs/cgs_implementation.md": "1132caf3b7667dff3e99108bc8817c8554a42df77693002af464a5618a87b3d4",
+      "docs/cgs_implementation_amendment_001.md": "1a741f5d9bd33ef2bcc458427ca75567115c028909ee6e545475062b78aca64e",
+      "docs/cgs_implementation_amendment_002.md": "e96efe477d43ce21995a5ef770a47585605f864937a502b3973f7f6c9f38d2b2",
+      "docs/cgs_prereg.md": "9d1e707ff871b838e8453016042a1ce73ad43d79432bf5b3a26e15099e775d1f",
+      "reports/cgs/pilot_pre_amendment_002_results.json": "7c6aa9136546cd35c30da78081dbb1103c4bf81a86a81bf8d98b70dc258b3b13",
+      "reports/cgs/pilot_pre_amendment_002_results.md": "c84f9a34830f1f54715d279b8817a5a5388efcd4d6d922b135701fc068451656",
+      "scripts/run_cgs.py": "0fd81d749d05b598a8274f68c8de37b5587ea78f10f4f1931acfd7764660303b",
+      "scripts/scan_staged_snapshot.py": "e994727f2a8763095d4d5aee1af5473253ec0869ef242e1f72fd8480f454fc6b",
+      "scripts/verify_public_snapshot.py": "e76d14fcadd4244b1cd8d3b78a89b5f03c3400b5060083d6af351b8d9b1e467f",
+      "tearrl/__init__.py": "8e0c2867813d24a103d7d49c35b23e27defa85b031b0954f4eb6c7691ce168cc",
+      "tearrl/cgs/__init__.py": "3a9e9a26f058dc857d4d4f524f80aa1a7ad49cef050c5bee262304d8ba0159fd",
+      "tearrl/cgs/actors.py": "ed04980c7dfd0f90c86191af045203bc3c2004b74efa85c8a4de373c93ef3c1f",
+      "tearrl/cgs/experiment.py": "c70ea34677d6ddebf6770d017afcd505ab6c7579fd3cb6d72a45d8b47c7ec705",
+      "tearrl/cgs/frozen_prereg.json": "d959934c5c9ed912c832f0578d0b4f1979f6f69c4aa7d424303e4b47f324a0a8",
+      "tearrl/cgs/governance.py": "452e5d1eb1b3e9b0758d9fafa39bf5a4ababc0ac9bf2f9a12e70a535e721f853",
+      "tearrl/cgs/metrics.py": "76fc6160aa8174ffda3a8d0e0e88d6e538cb7c8c7d4e12df2d8cfcb61edeef0b",
+      "tearrl/cgs/schema.py": "0ffc10073218666c76d211af38603d2e2c3026efd2416dac243f1f599622785e",
+      "tearrl/cgs/stage2.py": "6fa03bd5f188473973e7684e2bd54c3961335356605dfb1c35e0fb8709c81448",
+      "tearrl/cgs/witness.py": "5c8dcc9e3757b33b6dcc081b8a3d3afb61021842ba3e9ff571640fce121e3970",
+      "tearrl/cgs/worlds.py": "6c0a39288cb22567486c8264df27883e22cfe740e7d80aadf7f746bd8a76f0a3",
+      "tearrl/ledger.py": "e2303c7baa2607f2aa37df877a424b1f5b51fe02dca7ed004edeee211237ab75",
+      "tearrl/spec.py": "d143b3d40893e70faac1f473b85af93c04bc19265e77b84d0706d3db4a683672",
+      "tearrl/state.py": "8c20d6836da0d8ae44de4529485e873d03bac96f96ace6cee959dec20dda9734",
+      "tearrl/world.py": "45f09a7a0a21357f37ad1ea991b0ed7feb77f1384bc0df39971f5a4a10cff902",
+      "tests/test_cgs_actors.py": "319a61381f53d73f8f9cd44db81def8ce9aa328f3d1b46bebca98632c0a606e8",
+      "tests/test_cgs_amendment_002.py": "41099471cd89f061c6bb9f1effd7e8e285fab2a16422b6ab0d7777130969e978",
+      "tests/test_cgs_experiment.py": "7f0712e06ca3683342f64f4ac988fe3ab0a008fd046ddf15cfbc5476d33fc326",
+      "tests/test_cgs_governance.py": "3068cb08cb61fe0add7841f700d6feacc27fc2986ebfd9ef10417e1dac480bd4",
+      "tests/test_cgs_launcher.py": "541104f884b99852b441644f93bbc3f83049c48aaf59b20fb5d4c547c916c6de",
+      "tests/test_cgs_metrics.py": "688a8eec0d269f54832766c4f6951c5669ada46bdf8d5a95a09b7096d0da221e",
+      "tests/test_cgs_mutations.py": "ece6b7fffc4108ed5e7b124a4d717352d503ca7e58915be2f7e1b7a6c6084c44",
+      "tests/test_cgs_prereg.py": "126a7cc7ec6c54db2dca4db44587c9688bd39c0a221c5516fede7eb49116ad03",
+      "tests/test_cgs_witness.py": "5532232a69394299e0cf73c212e139ca7749a42e1c206dade687f346d1714cd9",
+      "tests/test_cgs_worlds.py": "6ea77652e1d1dbaf51f92f077ced53e5f8cc819f408caf0f047baa580cbf69a9",
+      "tests/test_public_snapshot.py": "f54e543f8e2bbc0886abec00edcbcadbc289ba73267460fcd5360a9892292589"
+    }
+  },
+  "launcher": {
+    "path": "scripts/run_cgs.py",
+    "sha256": "0fd81d749d05b598a8274f68c8de37b5587ea78f10f4f1931acfd7764660303b"
+  },
+  "mode": "confirmatory",
+  "observed": {
+    "after": {
+      "environment": {
+        "MKL_NUM_THREADS": "1",
+        "OMP_NUM_THREADS": "1",
+        "OPENBLAS_NUM_THREADS": "1"
+      },
+      "torch": {
+        "num_interop_threads": 8,
+        "num_threads": 1
+      }
+    },
+    "before": {
+      "environment": {
+        "MKL_NUM_THREADS": "1",
+        "OMP_NUM_THREADS": "1",
+        "OPENBLAS_NUM_THREADS": "1"
+      },
+      "torch": {
+        "num_interop_threads": 8,
+        "num_threads": 1
+      }
+    }
+  },
+  "outputs": {
+    "json": {
+      "bytes": 49208,
+      "path": "results.json",
+      "sha256": "5cad306367a83f4f6147618af89a433e22a2bdc1a780b59f9d70ade9ae3b033c"
+    },
+    "markdown": {
+      "bytes": 2724,
+      "path": "results.md",
+      "sha256": "29f2f9c2b1858283f04cfc681f1abfa68d3011b56c8b3991dbd925e4422037dd"
+    }
+  },
+  "profile_name": "env1_torch1_8",
+  "requested": {
+    "environment": {
+      "MKL_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1",
+      "OPENBLAS_NUM_THREADS": "1"
+    },
+    "torch": {
+      "num_interop_threads": 8,
+      "num_threads": 1
+    }
+  },
+  "runtime": {
+    "os_family": "Windows",
+    "packages": {
+      "networkx": "3.6.1",
+      "numpy": "2.5.1",
+      "pytest": "9.1.1",
+      "scipy": "1.18.0",
+      "torch": "2.11.0+cu128"
+    },
+    "python": {
+      "implementation": "CPython",
+      "version": "3.12.10"
+    },
+    "torch_cuda_build": "12.8",
+    "torch_module_version": "2.11.0+cu128"
+  },
+  "schema_version": 1,
+  "source_commit": {
+    "provenance": "caller_supplied",
+    "value": "8568edb329e3accdeab5f16c763d42853bef30fd"
+  },
+  "study": "TEAR-CG/S v0.1"
+}

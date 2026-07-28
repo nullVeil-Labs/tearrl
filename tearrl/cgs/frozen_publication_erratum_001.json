@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "study": "TEAR-CG/S v0.1",
+  "status": "append_only_post_result_publication_erratum_frozen_after_generation",
+  "erratum_id": "001",
+  "date": "2026-07-29",
+  "source_commit": "8568edb329e3accdeab5f16c763d42853bef30fd",
+  "generation_tooling_commit": "bbceeef6c7fc0440446d738bb6ff17863d750507",
+  "generation_tooling_parent_commit": "d48a678aaf4eb9429c93e36544beadecf9d8089b",
+  "parent_results_manifest": "tearrl/cgs/frozen_results.json",
+  "parent_results_manifest_sha256": "4f26f2b800b0ea3c87cb4e3fd263a9652c283a3be3bc3fb4b58d91c24ed3f2e1",
+  "generated_after_confirmatory_results": true,
+  "external_preoutcome_timestamp_recorded": false,
+  "later_publication_does_not_create_preoutcome_timestamp": true,
+  "frozen_artifacts_modified": false,
+  "registered_outcomes_changed": false,
+  "study_level_gate_dictionaries_changed": false,
+  "seed_level_component_bound_profile_sensitive": true,
+  "registered_outcomes": {
+    "grounding_pass": false,
+    "bounded_sufficiency_pass": false,
+    "geometry_pass": false,
+    "external_containment_pass": true
+  },
+  "correction_scope": [
+    "aggregation",
+    "measurement_status",
+    "publication_interpretation",
+    "provenance",
+    "bundled_numerical_thread_profile_sensitivity"
+  ],
+  "reference_files": {
+    "tearrl/cgs/frozen_results.json": "4f26f2b800b0ea3c87cb4e3fd263a9652c283a3be3bc3fb4b58d91c24ed3f2e1",
+    "reports/cgs/results.json": "1051c9b1b8a5a4f34d332a594836854cfb447f6f2bfb77f3e880b834950a9fec",
+    "reports/cgs/results.md": "064ecd9632240b3e5fab05312aa65eb8123674a46a4e3f5025f5458260a081ad",
+    "reports/cgs/final_report.md": "d12366065a250cd4e48251dad2713064b2309a4631d99109439c6b4fe4532766"
+  },
+  "artifact_files": {
+    "reports/cgs/publication_erratum_001.json": "7f988faedd1d810cd82b03b703fcb3546233979dfdd1a5a8256c43a41939b508",
+    "reports/cgs/publication_erratum_001.md": "38b4e9e6d17f8eaef743fb471dee6319d939cbd032c054a7d371c328fa45981e",
+    "reports/cgs/integrity_evidence_001.json": "8538ec68e2f92a7ada9744528fb8be4c694d530bc28a612fe496f69ff311068c",
+    "reports/cgs/reproduction_environment_001.json": "a26690e3a29bd548a46838102b6e4196bfc86ec19b7408a5b42792e5a3ede6e4",
+    "reports/cgs/thread_sensitivity_001.json": "7277556d8b604d0e5b6b1fd0edff3934d7f1df4d595290070a5707dc273058d1",
+    "reports/cgs/thread_profile_env8_torch8_8.json": "98b1f29fdb039874328863debc94ffa6cf688c4d1eb277ca7eb50affd8358f62",
+    "reports/cgs/thread_profile_env1_torch1_8.json": "222472b3773a1d6135637edcf6802c75e518fba67c5038e8e40ecd5ad8dfeef6",
+    "reports/cgs/thread_sensitivity_1t_results.json": "5cad306367a83f4f6147618af89a433e22a2bdc1a780b59f9d70ade9ae3b033c",
+    "reports/cgs/thread_sensitivity_1t_results.md": "29f2f9c2b1858283f04cfc681f1abfa68d3011b56c8b3991dbd925e4422037dd",
+    "reports/cgs/thread_sensitivity_001_context.md": "0d405d8e155e871e3e709591aef2891da44c0ae3785b9f8191f453aff7168262"
+  },
+  "public_filename_mapping": {
+    "recorded_reference": {
+      "profile": "env8_torch8_8",
+      "sidecar": "reports/cgs/thread_profile_env8_torch8_8.json",
+      "original_output_basenames": {
+        "json": "results.json",
+        "markdown": "results.md"
+      },
+      "public_outputs": {
+        "json": "reports/cgs/results.json",
+        "markdown": "reports/cgs/results.md"
+      }
+    },
+    "post_result_diagnostic": {
+      "profile": "env1_torch1_8",
+      "sidecar": "reports/cgs/thread_profile_env1_torch1_8.json",
+      "original_output_basenames": {
+        "json": "results.json",
+        "markdown": "results.md"
+      },
+      "public_outputs": {
+        "json": "reports/cgs/thread_sensitivity_1t_results.json",
+        "markdown": "reports/cgs/thread_sensitivity_1t_results.md"
+      },
+      "rename_reason": "release_byte_preservation_under_existing_frozen_gitattributes"
+    },
+    "strict_builder_reuse": "Copy the public diagnostic outputs to a fresh temporary directory as results.json and results.md, or verify the recorded hashes directly."
+  },
+  "limitations": [
+    "G7 was hard-coded true and was not measured by the frozen run; selected post-result integrity tests do not make it confirmatory.",
+    "The numerical profile contrast changes OMP, MKL, OpenBLAS, and Torch intra-op settings together; it does not isolate a Torch intra-op effect.",
+    "Cross-version and cross-platform bit-exactness remain untested.",
+    "The local preregistration-to-result sequence was not externally timestamped before outcome inspection.",
+    "The five non-punitive audit zeros were literal values, not runtime counters; separate measured containment evidence is reported.",
+    "Oracle-flat support is aggregate-only under exact bundled reports and direct charter-derived supervision; it is not evidence of internal alignment."
+  ]
+}
