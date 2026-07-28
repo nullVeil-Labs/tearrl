@@ -36,7 +36,15 @@ def test_metric_drift_can_preserve_registered_verdict_projection(tmp_path: Path)
     comparison = module.compare_results(RESULTS, _write_candidate(tmp_path, candidate))
     assert comparison["schema_version"] == 2
     assert comparison["structure_equal"] is True
-    assert "byte_equality_observed_only_under_the_recorded_numerical_profile" not in comparison["interpretation"]
+    assert comparison["interpretation"] == {
+        "G7_in_frozen_projection_is_not_a_runtime_measurement": True,
+        "non_punitive_audit_fields_in_projection_are_frozen_literals_not_runtime_counters": True,
+        "verdict_equality_does_not_imply_byte_equality": True,
+    }
+    assert (
+        "byte_equality_observed_only_under_the_recorded_numerical_profile"
+        not in comparison["interpretation"]
+    )
     assert comparison["byte_equal"] is False
     assert comparison["registered_verdict_projection_equal"] is True
     assert comparison["numeric_fields_differ"] == 1

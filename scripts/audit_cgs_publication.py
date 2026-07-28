@@ -750,21 +750,23 @@ def verify_source_snapshot(root: Path) -> dict[str, Any]:
     }
 
 
-def require_frozen_thread_profile(torch_module: Any = torch) -> dict[str, Any]:
+def require_recorded_reference_thread_profile(torch_module: Any = torch) -> dict[str, Any]:
     environment = {
         name: os.environ.get(name)
         for name in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS")
     }
     if set(environment.values()) != {"8"}:
         raise AuditError(
-            "frozen Stage 1 audit requires OMP/MKL/OpenBLAS thread variables 8/8/8; "
+            "recorded exact-reproduction Stage 1 audit requires "
+            "OMP/MKL/OpenBLAS thread variables 8/8/8; "
             f"observed {environment!r}"
         )
     intra = int(torch_module.get_num_threads())
     inter = int(torch_module.get_num_interop_threads())
     if (intra, inter) != (8, 8):
         raise AuditError(
-            "frozen Stage 1 audit requires torch intra/inter-op threads 8/8; "
+            "recorded exact-reproduction Stage 1 audit requires "
+            "torch intra/inter-op threads 8/8; "
             f"observed {intra}/{inter}"
         )
     return {
@@ -1552,7 +1554,7 @@ def validate_integrity_evidence(
     if relation.get("consumed_by_frozen_run") is not False:
         raise AuditError("integrity evidence incorrectly claims frozen-run use")
     if relation.get("publication_status") != (
-        "not_evaluated_in_frozen_run; separately_verified_post_result"
+        "not_evaluated_in_frozen_run; selected_integrity_tests_passed_post_result"
     ):
         raise AuditError("integrity evidence has an unsafe G7 publication status")
 
@@ -2077,6 +2079,7 @@ def validate_thread_sensitivity_evidence(
         "aggregate_cell_bit_equality": EXPECTED_AGGREGATE_CELL_BIT_EQUALITY,
         "interpretation": {
             "G7_in_frozen_projection_is_not_a_runtime_measurement": True,
+            "non_punitive_audit_fields_in_projection_are_frozen_literals_not_runtime_counters": True,
             "verdict_equality_does_not_imply_byte_equality": True,
         },
     }
@@ -2302,7 +2305,7 @@ def build_publication_payload(
                 "frozen_value": True,
                 "run_time_input": "hard_coded_true",
                 "publication_status": (
-                    "not_evaluated_in_frozen_run; separately_verified_post_result"
+                    "not_evaluated_in_frozen_run; selected_integrity_tests_passed_post_result"
                 ),
                 "grounding_effect": (
                     "none; G1 through G6 fail independently"
@@ -2314,13 +2317,15 @@ def build_publication_payload(
                 ],
             },
             "seed_6311_manipulation": {
-                "frozen_eight_thread_value": (
+                "frozen_result_value_under_recorded_reference_profile": (
                     EXPECTED_SEED_6311_MANIPULATION
                 ),
                 "registered_numerical_bound": 0.05,
                 "exceeds_bound": True,
                 "scope": (
-                    "seed-specific heterogeneity in the frozen 8-intraop/8-interop run; "
+                    "seed-specific value stored in the frozen result and reproduced "
+                    "under the recorded 8-intraop/8-interop reference profile; the "
+                    "numerical profile itself was neither frozen nor preregistered; "
                     "the registered pooled decision does not change"
                 ),
             },
@@ -2436,16 +2441,13 @@ def build_publication_payload(
                 "gate_effect": "none; MAE is secondary",
             },
             "thread_dependence": {
-                "byte_reproducible_profile": {
-                    "torch_intraop_threads": 8,
-                    "torch_interop_threads": 8,
-                },
+                "recorded_exact_reproduction_profile": dict(thread_profile),
                 "one_intraop_eight_interop_candidate_byte_equal": False,
                 "study_level_gate_dictionaries_and_final_verdicts_unchanged_1_vs_8": True,
                 "oracle_primary_evaluation_cells_bit_equal": True,
                 "oracle_training_final_losses_bit_equal": False,
                 "numeric_difference_summary": dict(EXPECTED_THREAD_DIFFERENCES),
-                "seed_6311_value_is_frozen_eight_thread_specific": True,
+                "seed_6311_value_is_from_frozen_result_under_recorded_reference_profile": True,
                 "candidate_seed_6311_value": thread_sensitivity[
                     "manipulation_degradation_by_seed"
                 ]["6311"]["candidate"],
@@ -2493,7 +2495,9 @@ def render_markdown(payload: Mapping[str, Any]) -> str:
         "",
         "## Stage 1 measurement status",
         "",
-        "G1–G6 reproduce exactly under the frozen 8/8 Torch thread profile. "
+        "G1–G6 reproduce exactly under the recorded exact-reproduction bundled "
+        "profile: `OMP_NUM_THREADS=8`, `MKL_NUM_THREADS=8`, "
+        "`OPENBLAS_NUM_THREADS=8`, Torch intra-op `8`, and Torch inter-op `8`. "
         "G7 was supplied a hard-coded `True`; it was not measured by the frozen "
         "run. The separately executed integrity tests are post-result evidence "
         "and do not retroactively turn G7 into a confirmatory measurement.",
@@ -2525,10 +2529,12 @@ def render_markdown(payload: Mapping[str, Any]) -> str:
         "The JSON companion contains every bin count, probability sum, positive "
         "count, and per-seed denominator required to recompute these values.",
         "",
-        "Seed `6311` had frozen 8-intraop/8-interop manipulation degradation "
-        f"`{corrections['seed_6311_manipulation']['frozen_eight_thread_value']:.17g}`, "
-        "above `0.05`. This is required seed-level heterogeneity; it does not "
-        "change the registered pooled decision.",
+        "Seed `6311` has manipulation degradation "
+        f"`{corrections['seed_6311_manipulation']['frozen_result_value_under_recorded_reference_profile']:.17g}` "
+        "stored in the frozen result and reproduced under the recorded reference "
+        "profile. The numerical profile itself was neither frozen nor "
+        "preregistered. This value is above `0.05`; it is required seed-level "
+        "heterogeneity and does not change the registered pooled decision.",
         "",
         "## Interpretation corrections",
         "",
@@ -2577,8 +2583,9 @@ def render_markdown(payload: Mapping[str, Any]) -> str:
         "Cross-version and cross-platform exactness remain untested. "
         "Every study-level gate dictionary and final verdict remained unchanged, "
         "but seed-level component-bound status did not: seed `6311` breached the "
-        "manipulation component bound at 8-intraop/8-interop and did not breach it "
-        "at 1-intraop/8-interop. Oracle primary evaluation cells remained bit-equal; "
+        "manipulation component bound under the recorded reference profile and did "
+        "not breach it under the diagnostic candidate profile. Oracle primary "
+        "evaluation cells remained bit-equal; "
         "some training final losses did not. This is sensitivity evidence, not a "
         "replacement result.",
         "",
@@ -2654,7 +2661,7 @@ def main() -> int:
     args = parser.parse_args()
     try:
         root = repository_root(Path.cwd())
-        profile = require_frozen_thread_profile()
+        profile = require_recorded_reference_thread_profile()
         source = verify_source_snapshot(root)
 
         def rooted(path: Path) -> Path:

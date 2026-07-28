@@ -272,7 +272,7 @@ def run_integrity_evidence(root: Path, revision: str) -> dict[str, object]:
         "frozen_g7_relationship": {
             "consumed_by_frozen_run": False,
             "publication_status": (
-                "not_evaluated_in_frozen_run; separately_verified_post_result"
+                "not_evaluated_in_frozen_run; selected_integrity_tests_passed_post_result"
             ),
         },
     }

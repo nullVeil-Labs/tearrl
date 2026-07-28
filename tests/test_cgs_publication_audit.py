@@ -39,7 +39,7 @@ class _Threads:
         return self.inter
 
 
-def _set_frozen_environment(monkeypatch) -> None:
+def _set_recorded_reference_environment(monkeypatch) -> None:
     for name in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS"):
         monkeypatch.setenv(name, "8")
 
@@ -48,10 +48,10 @@ def _frozen_result() -> dict:
     return json.loads((ROOT / "reports/cgs/results.json").read_text(encoding="utf-8"))
 
 
-def test_frozen_thread_profile_is_fail_closed(monkeypatch) -> None:
+def test_recorded_reference_profile_is_fail_closed(monkeypatch) -> None:
     module = _module()
-    _set_frozen_environment(monkeypatch)
-    assert module.require_frozen_thread_profile(_Threads(8, 8)) == {
+    _set_recorded_reference_environment(monkeypatch)
+    assert module.require_recorded_reference_thread_profile(_Threads(8, 8)) == {
         "OMP_NUM_THREADS": "8",
         "MKL_NUM_THREADS": "8",
         "OPENBLAS_NUM_THREADS": "8",
@@ -59,10 +59,10 @@ def test_frozen_thread_profile_is_fail_closed(monkeypatch) -> None:
         "torch_interop_threads": 8,
     }
     with pytest.raises(module.AuditError, match="requires torch.*8/8"):
-        module.require_frozen_thread_profile(_Threads(1, 8))
+        module.require_recorded_reference_thread_profile(_Threads(1, 8))
     monkeypatch.delenv("OMP_NUM_THREADS")
     with pytest.raises(module.AuditError, match="OMP/MKL/OpenBLAS"):
-        module.require_frozen_thread_profile(_Threads(8, 8))
+        module.require_recorded_reference_thread_profile(_Threads(8, 8))
 
 
 def test_ece_bins_publish_recomputable_sufficient_statistics() -> None:
@@ -167,6 +167,7 @@ def _thread_payload(module, frozen: dict) -> dict:
         ),
         "interpretation": {
             "G7_in_frozen_projection_is_not_a_runtime_measurement": True,
+            "non_punitive_audit_fields_in_projection_are_frozen_literals_not_runtime_counters": True,
             "verdict_equality_does_not_imply_byte_equality": True,
         },
     }
@@ -372,7 +373,7 @@ def _integrity_payload(module) -> dict:
         "frozen_g7_relationship": {
             "consumed_by_frozen_run": False,
             "publication_status": (
-                "not_evaluated_in_frozen_run; separately_verified_post_result"
+                "not_evaluated_in_frozen_run; selected_integrity_tests_passed_post_result"
             ),
         },
     }
@@ -458,7 +459,9 @@ def test_append_only_writer_refuses_existing_output(tmp_path: Path) -> None:
             },
         },
         "publication_corrections": {
-            "seed_6311_manipulation": {"frozen_eight_thread_value": 0.055},
+            "seed_6311_manipulation": {
+                "frozen_result_value_under_recorded_reference_profile": 0.055,
+            },
             "irreversible_wilson_omission": {"one_sided_wilson_upper": 0.286},
             "mae_interval_estimand": {"causal_only_rows": 18000},
         },
@@ -466,7 +469,7 @@ def test_append_only_writer_refuses_existing_output(tmp_path: Path) -> None:
             "integrity": {"result": {"passed": 34}},
             "environment": {
                 "python": {"version": "3.12.10"},
-                "packages": {"numpy": "2.5.1", "torch": "2.11.0"},
+                "packages": {"numpy": "2.5.1", "torch": "2.11.0+cu128"},
             },
             "thread_sensitivity": {
                 "reference": {"results_sha256": "1" * 64},
@@ -493,3 +496,125 @@ def test_private_local_paths_are_rejected_from_keys_and_values() -> None:
     ):
         with pytest.raises(module.AuditError, match="private local path"):
             module._reject_private_strings(value)
+
+
+def test_publication_profile_schema_and_wording_are_provenance_precise() -> None:
+    module = _module()
+    profile = {
+        "OMP_NUM_THREADS": "8",
+        "MKL_NUM_THREADS": "8",
+        "OPENBLAS_NUM_THREADS": "8",
+        "torch_intraop_threads": 8,
+        "torch_interop_threads": 8,
+    }
+    pooled = {
+        "stored_seed_mean_values": {
+            "ece": 0.17,
+            "selective_worst_party_fnr": 0.10,
+            "manipulation_fnr_degradation": 0.003,
+        },
+        "registered_pooled_values": {
+            "ece": 0.16,
+            "selective_worst_party_fnr": 0.11,
+            "selective_errors": 1,
+            "selective_positive_accepted": 9,
+            "manipulation_fnr_degradation": 0.0,
+            "manipulation_difference_sum": 0,
+            "manipulation_eligible_pairs": 10,
+        },
+        "irreversible_sufficient_statistics": {
+            "errors": 1,
+            "positives": 10,
+            "fnr": 0.1,
+            "one_sided_wilson_upper": 0.286,
+        },
+        "mae_estimands": {
+            "stored_combined_identifiable_point": 0.1,
+            "combined_identifiable_rows": 22512,
+            "causal_only_center": 0.1,
+            "causal_only_rows": 18000,
+        },
+    }
+    thread_sensitivity = {
+        "manipulation_degradation_by_seed": {
+            "6311": {"candidate": 0.032},
+        },
+        "reference": {"results_sha256": "1" * 64},
+        "candidate": {"results_sha256": "2" * 64},
+    }
+    payload = module.build_publication_payload(
+        frozen_result=_frozen_result(),
+        source={
+            "source_hashes": {},
+            "cgs_local_commit_sequence": ["preregister", "freeze", "result"],
+            "cgs_timing_status": "not_externally_timestamped_before_outcomes",
+        },
+        thread_profile=profile,
+        seed_audits=[
+            {
+                "seed": seed,
+                "reproduction": {},
+                "calibration": {},
+                "witness_training": {},
+            }
+            for seed in module.EXPECTED_SEEDS
+        ],
+        pooled=pooled,
+        integrity={
+            "result": {
+                "passed": 34,
+                "all_selected_tests_passed": True,
+            }
+        },
+        environment={
+            "python": {"version": "3.12.10"},
+            "packages": {"numpy": "2.5.1", "torch": "2.11.0+cu128"},
+        },
+        thread_sensitivity=thread_sensitivity,
+    )
+
+    correction = payload["publication_corrections"]
+    thread = correction["thread_dependence"]
+    assert thread["recorded_exact_reproduction_profile"] == profile
+    retired_profile_key = "byte_" + "reproducible_profile"
+    assert retired_profile_key not in thread
+    seed_correction = correction["seed_6311_manipulation"]
+    assert (
+        seed_correction["frozen_result_value_under_recorded_reference_profile"]
+        == module.EXPECTED_SEED_6311_MANIPULATION
+    )
+    assert "stored in the frozen result" in seed_correction["scope"]
+    assert "neither frozen nor preregistered" in seed_correction["scope"]
+    assert correction["G7_leakage_integrity"]["publication_status"] == (
+        "not_evaluated_in_frozen_run; "
+        "selected_integrity_tests_passed_post_result"
+    )
+
+    markdown = module.render_markdown(payload)
+    assert "recorded exact-reproduction bundled profile" in markdown
+    for control in (
+        "OMP_NUM_THREADS=8",
+        "MKL_NUM_THREADS=8",
+        "OPENBLAS_NUM_THREADS=8",
+        "Torch intra-op `8`",
+        "Torch inter-op `8`",
+    ):
+        assert control in markdown
+    retired_markdown = "frozen " + "8/8 Torch thread profile"
+    assert retired_markdown not in markdown
+    assert "stored in the frozen result and reproduced" in markdown
+    assert "profile itself was neither frozen nor preregistered" in markdown
+
+    audit_source = SCRIPT.read_text(encoding="utf-8")
+    integrity_source = (
+        ROOT / "scripts" / "run_cgs_integrity_evidence.py"
+    ).read_text(encoding="utf-8")
+    retired_callable = "require_frozen_" + "thread_profile"
+    retired_status = (
+        "not_evaluated_in_frozen_run; separately_"
+        "verified_post_result"
+    )
+    assert retired_callable not in audit_source
+    assert "require_recorded_reference_thread_profile" in audit_source
+    assert retired_status not in audit_source
+    assert retired_status not in integrity_source

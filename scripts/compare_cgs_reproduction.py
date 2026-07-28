@@ -177,6 +177,7 @@ def compare_results(reference_path: Path, candidate_path: Path) -> dict[str, Any
         },
         "interpretation": {
             "G7_in_frozen_projection_is_not_a_runtime_measurement": True,
+            "non_punitive_audit_fields_in_projection_are_frozen_literals_not_runtime_counters": True,
             "verdict_equality_does_not_imply_byte_equality": True,
         },
     }
