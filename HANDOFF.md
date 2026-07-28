@@ -4,7 +4,23 @@
 
 The completed TEAR-CC work was preserved in privacy-checked split commits on
 main; nothing was pushed during this handoff.
+### TEAR-CG/S successor
 
+- Froze the separate TEAR-CG/S v0.1 preregistration and implementation before
+  outcomes, including learned-vs-oracle × flat-vs-hierarchical cells,
+  cross-swaps, external containment, non-punitive treatment, and exact claim
+  boundaries.
+- Preserved the original diagnostic pilot byte-for-byte, froze Amendment 002 for
+  a degenerate all-positive baseline comparison, and reran the pilot from fresh
+  deterministic initialization. No model, data, seed, gate, or threshold moved.
+- Completed the untouched confirmatory seeds `4103, 5207, 6311`. Grounding,
+  registered bounded sufficiency, and geometry all failed. Oracle-flat passed
+  the bounded actor thresholds; oracle-hierarchy failed aggregate task retention
+  at `0.873804`.
+- External containment was exact in every primary cell. Every non-punitive audit
+  count was zero. No model artifacts were saved.
+- The blunt synthesis is `reports/cgs/final_report.md`; authoritative data are
+  `reports/cgs/results.json`.
 - Confirmed the adopted carry-debt amendment at repository commit `2cefb6d`.
   Computed the local document SHA-256 as
   `9f6ed78eac9a2bd53d3106c0f34d3732cc17d022977f89708d4ec8616f58ebdc`.
@@ -53,13 +69,15 @@ main; nothing was pushed during this handoff.
    general weighted blossom matching without reaching an artifact, so it was
    terminated. The registered run needs a scalable matching plan and a signed
    decision on the attribution amendment first.
-4. **Pilot authorization.** No run at or above pilot budget was launched. The
-   repository can run bounded smoke training; pilot/confirmatory work remains
-   explicitly unauthorized.
-5. **Successor direction.** No TEAR-CC v0.x design passed every frozen gate.
-   Scaling it to LLMs or pretraining would be scientifically unjustified. A new
-   version should be preregistered only after choosing a larger sequential/OOD
-   benchmark and independent plural-value process.
+4. **Original TEARRL-0 pilot authorization.** No original TEARRL-0 condition at
+   or above pilot budget was launched. The separate TEAR-CG/S successor has
+   completed its own preregistered pilot and confirmatory runs; that does not
+   authorize the older TEARRL-0 matrix.
+5. **Post-CG/S successor direction.** TEAR-CG/S v0.1 stopped at its frozen
+   confirmatory failures. Any v0.2 requires a new preregistration. The evidence
+   favors work on selective consequence grounding, irreversible-harm recall,
+   targeted repair, manipulation detection, and report-interface robustness;
+   it does not justify scaling to LLMs or pretraining.
 6. **Tuple prefix drift and comparator policy.** Previously identified sampler
    range drift and any change to the primary comparator remain protocol matters,
    not implementation fixes.
@@ -80,6 +98,16 @@ main; nothing was pushed during this handoff.
   conflict; v0.4 held-out representation/fidelity failure. The negative lineage
   is more informative than a tuned single pass would have been.
 
+- TEAR-CG/S learned grounding failed six of seven gates despite moderate average
+  channel error; irreversible FNR was `0.274746` and manipulation abstention was
+  `0.368316`.
+- Oracle-flat passed every bounded actor threshold. Oracle-hierarchy achieved
+  perfect registered violation rates and high repair but lost too much task
+  value in aggregate, so the registered hierarchy did not add demonstrated
+  value.
+- Cross-swaps exposed interface dependence: oracle-test reports improved repair
+  and task retention for learned-trained actors but collapsed ambiguity
+  deferral, while learned-test reports degraded oracle-trained actors.
 ## Numbers
 
 - Baseline before work: 255 tests, one benign warning.
@@ -91,10 +119,15 @@ main; nothing was pushed during this handoff.
 - TEAR-CC: 240 contexts; three fresh seeds per version; all result and gate
   tables are preserved under `reports/cc/`.
 
+- TEAR-CG/S confirmatory budget: 12,000 witness-training rows, 6,000 causal-OOD
+  rows, 3,000 manipulation rows, 4,000 actor-training contexts, and 2,000 actor
+  evaluation contexts per seed across three frozen seeds.
+- TEAR-CG/S confirmatory result: grounding `FAIL`, bounded sufficiency `FAIL`,
+  geometry `FAIL`, containment `PASS`.
 ## Not done
 
 - No registered 60,000-candidate F2 artifact.
 - No C2/C3/C3-IM production run without the missing scalar-cost authority.
-- No 50,000-transition pilot, confirmatory run, or large-model experiment.
+- No original TEARRL-0 50,000-transition pilot, confirmatory matrix, or large-model experiment. TEAR-CG/S is separate and complete.
 - No claim that TEAR-RL or TEAR-CC solves AI alignment, pretraining alignment,
   empathy, consciousness, or governance at deployment scale.

@@ -1,0 +1,30 @@
+{
+    "study":  "TEAR-CG/S v0.1",
+    "status":  "confirmatory_complete_stopped_without_tuning",
+    "date":  "2026-07-28",
+    "implementation_head_before_confirmatory":  "f4bdbdb5a893f1b7d72ae747865df52013e0fc27",
+    "preregistration_sha256":  "9d1e707ff871b838e8453016042a1ce73ad43d79432bf5b3a26e15099e775d1f",
+    "implementation_document_sha256":  "1132caf3b7667dff3e99108bc8817c8554a42df77693002af464a5618a87b3d4",
+    "amendment_001_manifest_sha256":  "909380a2c315e6e62567f20657701da2e4962ce94f7a074a6f052ae7ffcb09da",
+    "amendment_002_manifest_sha256":  "eab0ee54d100adce596ee9c896ff5be3537b44929c16b1727240b58eff7a3187",
+    "confirmatory_seeds":  [
+                               4103,
+                               5207,
+                               6311
+                           ],
+    "registered_outcomes":  {
+                                "grounding_pass":  false,
+                                "bounded_sufficiency_pass":  false,
+                                "geometry_pass":  false,
+                                "external_containment_pass":  true
+                            },
+    "result_files":  {
+                         "reports/cgs/pilot_pre_amendment_002_results.json":  "7c6aa9136546cd35c30da78081dbb1103c4bf81a86a81bf8d98b70dc258b3b13",
+                         "reports/cgs/pilot_pre_amendment_002_results.md":  "c84f9a34830f1f54715d279b8817a5a5388efcd4d6d922b135701fc068451656",
+                         "reports/cgs/pilot_results.json":  "d20ec428e86307447b81e94fff8b024e835a9593d47e104549951cf2ee4dcd17",
+                         "reports/cgs/pilot_results.md":  "9389c9dba3032200325f768a9197eb9e86ebb383835264bdf86181080283e700",
+                         "reports/cgs/results.json":  "1051c9b1b8a5a4f34d332a594836854cfb447f6f2bfb77f3e880b834950a9fec",
+                         "reports/cgs/results.md":  "064ecd9632240b3e5fab05312aa65eb8123674a46a4e3f5025f5458260a081ad",
+                         "reports/cgs/final_report.md":  "173c94025908814acc890fda6dc07b67d183c785427ad2fcb0ed6778acd7faea"
+                     }
+}
