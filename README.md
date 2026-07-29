@@ -6,6 +6,10 @@ and external containment in small symbolic multi-agent environments.
 
 ## Current status
 
+For a compact separation of closed results, development-only diagnostics,
+unexecuted protocol plans, and current claim boundaries, read
+the [scientific status report](reports/research_status.md).
+
 TEAR-RL is unfinished. The completed TEAR-CC v0.1–v0.4 lineage is negative: no
 version passed every frozen gate. TEAR-CG/S v0.1's frozen confirmatory run is
 closed and stopped without tuning, but its frozen report must be read together
