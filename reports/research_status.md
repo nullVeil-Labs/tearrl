@@ -122,13 +122,12 @@ target. No original TEARRL-0 pilot-budget run has occurred. See the
 
 ## TEARRL-0 protocol status
 
-The [v0.4.2 protocol](../TEARRL-0-v0.4.2-pilot-freeze.md) is a
-**freeze-candidate**, not a completed freeze. Its own status says the freeze
-completes only upon section 16; that checklist remains incomplete and unsigned.
-[Amendment 001](../TEARRL-0-amendment-001-draft.md) and
-[Amendment 002](../TEARRL-0-amendment-002-draft.md) are adopted, but they do not
-complete section 16. No original TEARRL-0 pilot, calibration, confirmatory
-matrix, or large-model experiment has been launched.
+The locally preserved v0.4.2 design is a **freeze-candidate**, not a completed
+freeze. Its own status says the freeze completes only upon section 16; that
+checklist remains incomplete and unsigned. No original TEARRL-0 pilot,
+calibration, confirmatory matrix, or large-model experiment has been launched.
+The public [handoff record](../HANDOFF.md) documents the unexecuted conditions
+and missing production prerequisites without publishing local review material.
 
 On 2026-07-29, a computational-feasibility review found the planned v0.4.2
 matrix incompatible with the project's maximum ten-hour outcome-bearing
