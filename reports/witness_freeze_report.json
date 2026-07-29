@@ -1,0 +1,33 @@
+{
+  "episodes": 250000,
+  "unique_states": 1799112,
+  "pairs": 9295175,
+  "states_visited": 8000000,
+  "build_seconds": 789.6,
+  "train_seconds": 571.3,
+  "freeze_report": {
+    "within_half_bin": 0.9994205142264295,
+    "per_channel_within_half_bin": [
+      0.9999086154160417,
+      0.9999967746617426,
+      1.0,
+      0.9999956995489901,
+      0.9995000725701108
+    ],
+    "max_abs_error": 0.43518340587615967,
+    "recall": {
+      "U": 1.0,
+      "E": 1.0,
+      "O": 1.0,
+      "irr": 1.0
+    },
+    "fpr": {
+      "U": 0.0,
+      "E": 0.0,
+      "O": 0.0,
+      "irr": 0.0
+    },
+    "n_pairs": 930135
+  },
+  "criteria_met": true
+}

@@ -112,6 +112,11 @@ See the [anchor report](p_care_anchors.md).
 
 ### Production training remains incomplete
 
+The frozen witness met its scripted-distribution development criterion on
+930,135 held-out pairs, but policy-visited coverage remains untested because no
+pilot policy exists. This is witness-pipeline evidence, not an alignment result;
+see the [witness freeze development report](witness_freeze_report.md).
+
 The production trainer has bounded smoke evidence for C1, C4, and C6 only. The
 published smoke artifacts contain 8 or 32 transitions; they demonstrate routing,
 finite updates, and basic execution, not learned alignment. C2, C3, and C3-IM
