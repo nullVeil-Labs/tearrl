@@ -1,0 +1,9 @@
+{
+  "document": "docs/cpp_prereg.md",
+  "sha256": "9a2cbf6d26cf847762eeb489ab83784c2e640a70ec98b6f4090a48b0d3e6364d",
+  "hash_domain": "committed_git_blob_bytes",
+  "status": "frozen_before_implementation_and_outcomes",
+  "date": "2026-07-31",
+  "parent_commit": "0d241f02e63a35009aee77b1754f394570a45d13",
+  "study": "TEAR-CPP v0.1"
+}
