@@ -1,0 +1,27 @@
+{
+  "confirmatory_seeds": [
+    2609,
+    3613,
+    4621,
+    5623,
+    6637
+  ],
+  "hash_domain": "exact_file_bytes",
+  "implementation_manifest_sha256": "971ab37252f128a8506070e588f28a19729664aa0d50eaf5669a89f001bd87d7",
+  "preflight_sha256": "f647ea9b904d3f10aad13de878706689a4406251c91f57c2cb77715f82f434a7",
+  "preregistration_sha256": "9a2cbf6d26cf847762eeb489ab83784c2e640a70ec98b6f4090a48b0d3e6364d",
+  "registered_outcomes": {
+    "calibration_validity_pass": false,
+    "complete_positive_interpretation_available": false,
+    "d_exit_pass": false,
+    "primary_pass": false,
+    "secondary_pass": true
+  },
+  "result_files": {
+    "reports/cpp/results.json": "2e87f7a9f0143d9e488b8e53e0f94763527e7fc30f66bda3421d4a972cc992a0",
+    "reports/cpp/results.md": "5f2385829c5d26614501460b5851e24acb91e29ec44b8ad40230f80d32b64bca"
+  },
+  "schema_version": "tear-cpp-frozen-results-v0.1",
+  "status": "confirmatory_complete_stopped_without_tuning",
+  "study": "TEAR-CPP v0.1"
+}
