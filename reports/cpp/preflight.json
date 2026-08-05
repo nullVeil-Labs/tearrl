@@ -1,0 +1,18 @@
+{
+  "elapsed_seconds": 1.9219999999995707,
+  "implementation_manifest_sha256": "971ab37252f128a8506070e588f28a19729664aa0d50eaf5669a89f001bd87d7",
+  "integrity": {
+    "c_d_frozen_digests_equal": true,
+    "common_estimator_digest_stable": true,
+    "frozen_digest_stable_after_all_policy_cells": true,
+    "posterior_row_count_matches_registered_budget": true
+  },
+  "pass": true,
+  "predicted_confirmatory_seconds": 129.60999999999785,
+  "prediction_rule": "single_seed_seconds_times_5_plus_120",
+  "preregistration_sha256": "9a2cbf6d26cf847762eeb489ab83784c2e640a70ec98b6f4090a48b0d3e6364d",
+  "schema_version": "tear-cpp-preflight-v0.1",
+  "scientific_metrics_suppressed": true,
+  "seed": 1709,
+  "watchdog_seconds": 870
+}

@@ -1,0 +1,15 @@
+{
+  "confirmatory_seeds": [
+    2609,
+    3613,
+    4621,
+    5623,
+    6637
+  ],
+  "implementation_manifest_sha256": "971ab37252f128a8506070e588f28a19729664aa0d50eaf5669a89f001bd87d7",
+  "preflight_sha256": "f647ea9b904d3f10aad13de878706689a4406251c91f57c2cb77715f82f434a7",
+  "preregistration_sha256": "9a2cbf6d26cf847762eeb489ab83784c2e640a70ec98b6f4090a48b0d3e6364d",
+  "reservation_sha256": "06ca60cd68484806603a8f5fb0fcba93d091380f77369e698466f9f297af4e3a",
+  "schema_version": "tear-cpp-confirmatory-authorization-v0.1",
+  "status": "authorization_consumed_before_token_issue"
+}

@@ -1,0 +1,52 @@
+{
+  "capture_scope": "post_result_publication_metadata",
+  "claim_boundary": "Records installed distribution versions and the registered execution profile; it is not a wheel-hash lock or a cross-platform reproducibility claim.",
+  "distributions": {
+    "Jinja2": "3.1.6",
+    "MarkupSafe": "3.0.3",
+    "Pygments": "2.20.0",
+    "colorama": "0.4.6",
+    "filelock": "3.29.0",
+    "fsspec": "2026.4.0",
+    "iniconfig": "2.3.0",
+    "mpmath": "1.3.0",
+    "networkx": "3.6.1",
+    "numpy": "2.5.1",
+    "packaging": "26.2",
+    "pip": "26.1.2",
+    "pluggy": "1.6.0",
+    "pytest": "9.1.1",
+    "scipy": "1.18.0",
+    "setuptools": "78.1.0",
+    "sympy": "1.14.0",
+    "torch": "2.11.0+cu128",
+    "typing_extensions": "4.15.0"
+  },
+  "execution_profile": {
+    "device": "cpu",
+    "isolated_flags": [
+      "-I",
+      "-S",
+      "-P",
+      "-B"
+    ],
+    "mkl_num_threads": 1,
+    "omp_num_threads": 1,
+    "openblas_num_threads": 1,
+    "torch_device_backend_autoload": 0,
+    "torch_inter_op_threads": 1,
+    "torch_intra_op_threads": 1
+  },
+  "interpreter": {
+    "implementation": "CPython",
+    "version": "3.12.10"
+  },
+  "operating_system": {
+    "architecture": "AMD64",
+    "name": "Windows",
+    "release": "11",
+    "version": "10.0.26200"
+  },
+  "schema_version": "tear-cpp-runtime-environment-v0.1",
+  "study": "TEAR-CPP v0.1"
+}
